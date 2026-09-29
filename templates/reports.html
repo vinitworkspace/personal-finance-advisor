@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Reports{% endblock %}
+{% block header_title %}Monthly Financial Report & Audit{% endblock %}
+{% block header_subtitle %}Comprehensive executive financial summaries, category audits, and cached AI recommendations{% endblock %}
+
+{% block styles %}
+<style>
+  @media print {
+    .app-sidebar, .app-topbar, .report-controls, .historical-archive, .disclaimer-banner, .btn {
+      display: none !important;
+    }
+    .app-wrapper {
+      display: block !important;
+    }
+    .content-body {
+      padding: 0 !important;
+    }
+    .printable-report {
+      border: none !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+    .printable-report * {
+      color: #000000 !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Report Filter & Action Controls -->
+<div class="card report-controls" style="margin-bottom: 24px; padding: 18px 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <form method="GET" action="{{ url_for('reports.view_reports') }}" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+      <div style="min-width: 140px;">
+        <label class="form-label" for="rep-month">Select Month</label>
+        <select id="rep-month" name="month" class="form-control">
+          {% for m in range(1, 13) %}
+            <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>
+              {{ ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m-1] }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="min-width: 110px;">
+        <label class="form-label" for="rep-year">Year</label>
+        <select id="rep-year" name="year" class="form-control">
+          {% for y in range(2024, 2028) %}
+            <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-secondary">Load Snapshot</button>
+    </form>
+
+    <div style="display: flex; gap: 10px;">
+      <form method="POST" action="{{ url_for('reports.generate_report') }}" style="display: inline;">
+        <input type="hidden" name="month" value="{{ selected_month }}">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+        <button type="submit" class="btn btn-primary">
+          🔄 Compile & Re-Analyze
+        </button>
+      </form>
+      <button type="button" class="btn btn-secondary" onclick="window.print()">
+        🖨️ Print / Save PDF
+      </button>
+      <a href="{{ url_for('reports.export_csv') }}" class="btn btn-secondary">
+        📥 Export All (CSV)
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Main Printable Executive Report Sheet -->
+<div class="card printable-report" style="margin-bottom: 28px; padding: 36px;">
+  <!-- Report Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-subtle); padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.6rem; margin-bottom: 4px;">Executive Financial Statement</h2>
+      <p style="color: var(--text-dim); font-size: 0.88rem;">
+        Period: <strong>{{ ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][selected_month-1] }} {{ selected_year }}</strong>
+      </p>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-size: 1rem; font-weight: 700; color: #ffffff;">{{ current_user.name }}</div>
+      <div style="font-size: 0.78rem; color: var(--text-dim);">
+        Archived: {{ report.generated_at.strftime('%d %b %Y, %H:%M UTC') }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Scorecard KPIs -->
+  <div class="stats-grid" style="margin-bottom: 28px;">
+    <div class="card" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
+      <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Total Inflows</span>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--income-green); margin-top: 6px;">
+        {{ current_user.currency }}{{ "%.2f"|format(report.total_income) }}
+      </div>
+    </div>
+
+    <div class="card" style="background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.25);">
+      <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Total Outflows</span>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--expense-rose); margin-top: 6px;">
+        {{ current_user.currency }}{{ "%.2f"|format(report.total_expenses) }}
+      </div>
+    </div>
+
+    <div class="card" style="background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25);">
+      <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Net Monthly Surplus</span>
+      <div style="font-size: 1.5rem; font-weight: 800; color: {% if report.total_savings >= 0 %}#ffffff{% else %}var(--expense-rose){% endif %}; margin-top: 6px;">
+        {{ current_user.currency }}{{ "%.2f"|format(report.total_savings) }}
+      </div>
+    </div>
+
+    <div class="card" style="background: rgba(6, 182, 212, 0.08); border-color: rgba(6, 182, 212, 0.25);">
+      <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Savings Rate</span>
+      <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 6px;">
+        {{ report.savings_percentage }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Audit Breakdown Table -->
+  <div style="margin-bottom: 32px;">
+    <h3 style="font-size: 1.15rem; margin-bottom: 14px;">Expense Categorical Audit</h3>
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Expense Category</th>
+            <th style="text-align: right;">Amount Spent</th>
+            <th style="text-align: right;">Share of Outflows</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if summary.category_breakdown %}
+            {% for cat, amt in summary.category_breakdown.items() %}
+              <tr>
+                <td style="font-weight: 600;">
+                  <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
+                </td>
+                <td style="text-align: right; font-weight: 700; color: #ffffff;">
+                  {{ current_user.currency }}{{ "%.2f"|format(amt) }}
+                </td>
+                <td style="text-align: right; font-weight: 600; color: #a5b4fc;">
+                  {% if report.total_expenses > 0 %}
+                    {{ "%.1f"|format(amt / report.total_expenses * 100) }}%
+                  {% else %}
+                    0.0%
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="3" style="text-align: center; color: var(--text-dim); padding: 20px;">
+                No expenses logged for this reporting period.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AI Executive Advisory Summary -->
+  <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+      <span style="font-size: 1.25rem;">✨</span>
+      <h3 style="font-size: 1.15rem; margin: 0;">AI Strategic Financial Recommendations</h3>
+    </div>
+    <div id="ai-report-content" style="line-height: 1.7; font-size: 0.92rem; color: #e2e8f0;">
+      <!-- Pre-rendered markdown body -->
+      {{ report.ai_summary|replace('\n', '<br>')|safe }}
+    </div>
+  </div>
+</div>
+
+<!-- Historical Archive Section -->
+<div class="card historical-archive">
+  <h3 style="margin-bottom: 16px;">Historical Reports Archive</h3>
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Total Income</th>
+          <th>Total Expenses</th>
+          <th>Net Savings</th>
+          <th>Savings Rate</th>
+          <th>Archived Date</th>
+          <th style="text-align: center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if history %}
+          {% for h in history %}
+            <tr>
+              <td style="font-weight: 600;">
+                {{ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][h.month-1] }} {{ h.year }}
+              </td>
+              <td style="color: var(--income-green);">{{ current_user.currency }}{{ "%.2f"|format(h.total_income) }}</td>
+              <td style="color: var(--expense-rose);">{{ current_user.currency }}{{ "%.2f"|format(h.total_expenses) }}</td>
+              <td style="font-weight: 700;">{{ current_user.currency }}{{ "%.2f"|format(h.total_savings) }}</td>
+              <td style="color: #38bdf8;">{{ h.savings_percentage }}%</td>
+              <td style="color: var(--text-dim); font-size: 0.8rem;">{{ h.generated_at.strftime('%d %b %Y') }}</td>
+              <td style="text-align: center;">
+                <a href="{{ url_for('reports.view_reports', month=h.month, year=h.year) }}" class="btn btn-secondary btn-sm">
+                  View Report
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">
+              No historical reports archived yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

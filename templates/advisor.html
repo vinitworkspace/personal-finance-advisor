@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}AI Financial Advisor{% endblock %}
+{% block header_title %}AI Financial Advisor & Mentor{% endblock %}
+{% block header_subtitle %}Ask questions about your finances, analyze spending patterns, and receive personalized budgeting recommendations{% endblock %}
+
+{% block styles %}
+<style>
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 270px);
+    min-height: 480px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .chat-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .chat-stream {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-msg {
+    display: flex;
+    gap: 12px;
+    max-width: 80%;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chat-msg-user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .chat-msg-bot {
+    align-self: flex-start;
+  }
+
+  .msg-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .avatar-bot {
+    background: var(--ai-gradient);
+    color: #ffffff;
+    box-shadow: 0 0 14px var(--ai-glow);
+  }
+
+  .avatar-user {
+    background: var(--primary-gradient);
+    color: #ffffff;
+  }
+
+  .msg-bubble {
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .bubble-user {
+    background: var(--primary);
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+  }
+
+  .bubble-bot {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border-bottom-left-radius: 2px;
+  }
+
+  .bubble-bot p {
+    margin-bottom: 10px;
+  }
+
+  .bubble-bot p:last-child {
+    margin-bottom: 0;
+  }
+
+  .bubble-bot ul, .bubble-bot ol {
+    margin-left: 20px;
+    margin-bottom: 10px;
+  }
+
+  .bubble-bot li {
+    margin-bottom: 4px;
+  }
+
+  .prompt-pills-bar {
+    padding: 12px 20px;
+    background: rgba(10, 15, 28, 0.4);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .prompt-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    color: #cbd5e1;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .prompt-pill:hover {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  .chat-input-bar {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-subtle);
+    background: rgba(15, 23, 42, 0.7);
+    display: flex;
+    gap: 12px;
+  }
+
+  .typing-indicator {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    padding: 6px 12px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #38bdf8;
+    animation: typingBounce 1.2s infinite ease-in-out;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="msg-avatar avatar-bot">✨</div>
+      <div>
+        <h3 style="font-size: 1rem; margin: 0;">FinanceAI Assistant</h3>
+        <span style="font-size: 0.75rem; color: #34d399; display: flex; align-items: center; gap: 4px;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+          Gemini 1.5 Flash Grounded Mode Active
+        </span>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-secondary btn-sm" onclick="generateComprehensiveReport()">
+      📑 Generate Full Monthly Report
+    </button>
+  </div>
+
+  <!-- Messages Stream -->
+  <div class="chat-stream" id="chat-stream">
+    <!-- Initial Welcome Message from AI -->
+    <div class="chat-msg chat-msg-bot">
+      <div class="msg-avatar avatar-bot">✨</div>
+      <div class="msg-bubble bubble-bot">
+        <p>
+          Hello <strong>{{ current_user.name }}</strong>! I am your <strong>Personal Finance Advisor Bot</strong>.
+        </p>
+        <p>
+          I have analyzed your recorded transactions for this month (<strong>{{ current_user.currency }}{{ "%.2f"|format(summary.total_income) }}</strong> income, <strong>{{ current_user.currency }}{{ "%.2f"|format(summary.total_expenses) }}</strong> expenses, <strong>{{ summary.savings_percentage }}%</strong> savings rate).
+        </p>
+        <p>
+          Click any quick suggestion below or ask me any questions about reducing spending, student allowances, freelance budgets, or building your emergency fund!
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Suggestion Pills Bar -->
+  <div class="prompt-pills-bar">
+    <span style="font-size: 0.76rem; color: var(--text-dim); align-self: center; margin-right: 4px;">Suggestions:</span>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('Where am I spending the most?')">
+      🔍 Where am I spending the most?
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('How can I reduce my expenses?')">
+      💡 How can I reduce my expenses?
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('How much did I save this month?')">
+      💰 How much did I save this month?
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('Give me a simple budget for next month.')">
+      🎯 Budget for next month
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('How can I build an emergency fund?')">
+      🛡️ How to build an emergency fund
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('I am a college student with limited allowance, how should I budget?')">
+      🎓 Student budgeting strategy
+    </button>
+    <button type="button" class="prompt-pill" onclick="sendPrompt('I am a freelancer with fluctuating income, how should I manage cash flow?')">
+      💼 Freelancer cash flow plan
+    </button>
+  </div>
+
+  <!-- Chat Input Controls -->
+  <form id="chat-form" class="chat-input-bar" onsubmit="handleChatSubmit(event)">
+    <input 
+      type="text" 
+      id="chat-input" 
+      class="form-control" 
+      placeholder="Ask a financial question (e.g. 'Which category should I reduce next month?')..." 
+      autocomplete="off"
+      required
+    >
+    <button type="submit" id="chat-send-btn" class="btn btn-primary" style="padding: 10px 20px;">
+      Send 🚀
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/advisor.js') }}"></script>
+{% endblock %}

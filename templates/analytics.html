@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Analytics{% endblock %}
+{% block header_title %}Analytics & Spending Trends{% endblock %}
+{% block header_subtitle %}Deep dive into categorical Pareto distributions, burn rate velocity, and 6-month trajectories{% endblock %}
+
+{% block content %}
+<!-- Period Filter Controls -->
+<div class="card" style="margin-bottom: 24px; padding: 18px 24px;">
+  <form method="GET" action="{{ url_for('analytics.view_analytics') }}" style="display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 140px;">
+      <label class="form-label" for="analytics-month">Evaluation Month</label>
+      <select id="analytics-month" name="month" class="form-control">
+        {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>
+            {{ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m-1] }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 120px;">
+      <label class="form-label" for="analytics-year">Year</label>
+      <select id="analytics-year" name="year" class="form-control">
+        {% for y in range(2024, 2028) %}
+          <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Refresh Analytics</button>
+  </form>
+</div>
+
+<!-- Velocity & Health Metric Cards -->
+<div class="stats-grid">
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Daily Burn Rate</span>
+      <div class="stat-icon-box stat-icon-expense">⚡</div>
+    </div>
+    <div class="stat-value" style="color: #ffffff;">
+      {{ current_user.currency }}{{ "%.2f"|format(velocity.average_daily_spend) }}
+    </div>
+    <div class="stat-meta">
+      {{ velocity.days_elapsed }} day{% if velocity.days_elapsed != 1 %}s{% endif %} observed in {{ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selected_month-1] }}
+    </div>
+  </div>
+
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Month-End Projection</span>
+      <div class="stat-icon-box stat-icon-savings">🔭</div>
+    </div>
+    <div class="stat-value" style="color: #38bdf8;">
+      {{ current_user.currency }}{{ "%.2f"|format(velocity.projected_spend) }}
+    </div>
+    <div class="stat-meta">
+      Based on {{ velocity.days_in_month }} days monthly span
+    </div>
+  </div>
+
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Net Savings Buffer</span>
+      <div class="stat-icon-box stat-icon-income">🛡️</div>
+    </div>
+    <div class="stat-value" style="color: {% if summary.net_balance >= 0 %}var(--income-green){% else %}var(--expense-rose){% endif %};">
+      {{ current_user.currency }}{{ "%.2f"|format(summary.net_balance) }}
+    </div>
+    <div class="stat-meta">
+      Savings Rate: {{ summary.savings_percentage }}%
+    </div>
+  </div>
+</div>
+
+<!-- Automated Pattern Detection Insights -->
+<div class="card" style="margin-bottom: 28px;">
+  <h3 style="margin-bottom: 14px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+    <span>🔍</span> Automated Spending Pattern Observations
+  </h3>
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    {% for ins in insights %}
+      <div class="alert alert-{{ ins.type }} alert-permanent" style="margin-bottom: 0;">
+        <div>
+          <strong>{{ ins.title }}:</strong> {{ ins.message }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Visual Charts Section (Grid: 2fr Trends, 1fr Category Donut) -->
+<div class="charts-grid">
+  <!-- Monthly Cash Flow Trajectory -->
+  <div class="card">
+    <div style="margin-bottom: 16px;">
+      <h3>6-Month Cash Flow Trajectory</h3>
+      <p style="font-size: 0.8rem; color: var(--text-dim);">Historical inflows vs outflows comparison</p>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="cashflowTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Expense Category Breakdown Doughnut -->
+  <div class="card">
+    <div style="margin-bottom: 16px;">
+      <h3>Category Share</h3>
+      <p style="font-size: 0.8rem; color: var(--text-dim);">Distribution across expenditure types</p>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="categoryDonutChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Category Pareto Table with Progress Meters -->
+<div class="card">
+  <h3 style="margin-bottom: 18px;">Expense Category Pareto Breakdown</h3>
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th style="width: 40%;">Expense Share</th>
+          <th style="text-align: right;">Percentage</th>
+          <th style="text-align: right;">Amount Spent</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if distribution.category_list %}
+          {% for item in distribution.category_list %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ item.color }};"></span>
+                  <span style="font-weight: 600;">{{ item.category }}</span>
+                </div>
+              </td>
+              <td>
+                <div style="height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden;">
+                  <div style="height: 100%; width: {{ item.percentage }}%; background-color: {{ item.color }}; border-radius: 4px;"></div>
+                </div>
+              </td>
+              <td style="text-align: right; font-weight: 600; color: #a5b4fc;">
+                {{ item.percentage }}%
+              </td>
+              <td style="text-align: right; font-weight: 700; color: #ffffff;">
+                {{ current_user.currency }}{{ "%.2f"|format(item.amount) }}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 36px; color: var(--text-dim);">
+              No expenditures recorded for this period.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

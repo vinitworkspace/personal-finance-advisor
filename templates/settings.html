@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+{% block header_title %}Account Settings & Configuration{% endblock %}
+{% block header_subtitle %}Manage your currency preferences, export your transaction ledger, and maintain your account{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+  <!-- Profile & Identity Card -->
+  <div class="card">
+    <h3 style="margin-bottom: 16px;">Profile Information</h3>
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+      <div class="user-avatar" style="width: 54px; height: 54px; font-size: 1.3rem;">
+        {{ current_user.name[:1].upper() }}
+      </div>
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 700;">{{ current_user.name }}</div>
+        <div style="color: var(--text-dim); font-size: 0.85rem;">{{ current_user.email }}</div>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem;">
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-dim);">Account ID:</span>
+        <span style="font-family: monospace;">#{{ current_user.id }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-dim);">Member Since:</span>
+        <span>{{ current_user.created_at.strftime('%d %B %Y') }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-dim);">Storage Mode:</span>
+        <span style="color: var(--income-green);">SQLite (Isolated)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferred Currency Selector Card -->
+  <div class="card">
+    <h3 style="margin-bottom: 8px;">Currency Preference</h3>
+    <p style="font-size: 0.84rem; color: var(--text-dim); margin-bottom: 20px;">
+      Change the active currency symbol displayed across your dashboard, ledgers, and reports.
+    </p>
+
+    <form method="POST" action="{{ url_for('reports.update_currency') }}">
+      <div class="form-group">
+        <label for="currency-select" class="form-label">Active Symbol</label>
+        <select id="currency-select" name="currency" class="form-control" style="font-size: 1.05rem;">
+          <option value="₹" {% if current_user.currency == '₹' %}selected{% endif %}>₹ Indian Rupee (INR)</option>
+          <option value="$" {% if current_user.currency == '$' %}selected{% endif %}>$ US Dollar (USD)</option>
+          <option value="€" {% if current_user.currency == '€' %}selected{% endif %}>€ Euro (EUR)</option>
+          <option value="£" {% if current_user.currency == '£' %}selected{% endif %}>£ British Pound (GBP)</option>
+          <option value="¥" {% if current_user.currency == '¥' %}selected{% endif %}>¥ Japanese Yen (JPY)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        Save Currency Preference
+      </button>
+    </form>
+  </div>
+
+  <!-- Data Export & Backup Card -->
+  <div class="card">
+    <h3 style="margin-bottom: 8px;">Export Financial Data</h3>
+    <p style="font-size: 0.84rem; color: var(--text-dim); margin-bottom: 20px;">
+      Download your complete transaction history (inflows, outflows, categories, and dates) in CSV format for spreadsheet analysis.
+    </p>
+
+    <a href="{{ url_for('reports.export_csv') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">
+      📥 Download Ledger (CSV)
+    </a>
+    <span style="font-size: 0.76rem; color: var(--text-dim); display: block; text-align: center;">
+      Compatible with Microsoft Excel, Google Sheets, and LibreOffice.
+    </span>
+  </div>
+
+  <!-- Viva Demonstration Reset Card -->
+  <div class="card" style="border: 1px dashed rgba(244, 63, 94, 0.4);">
+    <h3 style="color: #fb7185; margin-bottom: 8px;">Viva / Demonstration Reset</h3>
+    <p style="font-size: 0.84rem; color: var(--text-dim); margin-bottom: 20px;">
+      Quickly reset this user's account to the baseline Salaried Professional demonstration dataset (Scenario 1) for grading or testing.
+    </p>
+
+    <form method="POST" action="{{ url_for('reports.reset_demo_data') }}" onsubmit="return confirm('Reset all data for this account to standard baseline transactions?');">
+      <button type="submit" class="btn btn-danger" style="width: 100%;">
+        ⚡ Reset to Demo Baseline
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

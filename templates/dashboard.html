@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header_title %}Financial Command Center{% endblock %}
+{% block header_subtitle %}Overview for {{ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][today.month-1] }} {{ today.year }} | Real-time Analytics{% endblock %}
+
+{% block content %}
+<!-- Active Budget Overrun Alert Banners -->
+{% if budget_status.alerts %}
+  <div style="margin-bottom: 24px;">
+    {% for alert in budget_status.alerts %}
+      <div class="alert alert-{{ alert.severity }} alert-permanent">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span>{% if alert.severity == 'danger' %}🚨{% else %}⚠️{% endif %}</span>
+          <span><strong>Budget Guardrail:</strong> {{ alert.message }}</span>
+        </div>
+        <a href="{{ url_for('budget.view_budgets') }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+          View Budget
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- 4 Core Hero KPI Stat Cards -->
+<div class="stats-grid">
+  <!-- Income Card -->
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Monthly Income</span>
+      <div class="stat-icon-box stat-icon-income">💰</div>
+    </div>
+    <div class="stat-value" style="color: var(--income-green);">
+      {{ current_user.currency }}{{ "%.2f"|format(summary.total_income) }}
+    </div>
+    <div class="stat-meta">
+      <span>{{ summary.income_count }} inflow transaction{% if summary.income_count != 1 %}s{% endif %}</span>
+    </div>
+  </div>
+
+  <!-- Expenses Card -->
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Monthly Outflows</span>
+      <div class="stat-icon-box stat-icon-expense">💳</div>
+    </div>
+    <div class="stat-value" style="color: var(--expense-rose);">
+      {{ current_user.currency }}{{ "%.2f"|format(summary.total_expenses) }}
+    </div>
+    <div class="stat-meta">
+      <span>Avg: {{ current_user.currency }}{{ "%.2f"|format(velocity.average_daily_spend) }}/day</span>
+    </div>
+  </div>
+
+  <!-- Net Balance Card -->
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Net Balance</span>
+      <div class="stat-icon-box stat-icon-balance">⚖️</div>
+    </div>
+    <div class="stat-value" style="color: {% if summary.net_balance >= 0 %}#ffffff{% else %}var(--expense-rose){% endif %};">
+      {{ current_user.currency }}{{ "%.2f"|format(summary.net_balance) }}
+    </div>
+    <div class="stat-meta">
+      <span>Remaining available capital</span>
+    </div>
+  </div>
+
+  <!-- Savings Rate Card -->
+  <div class="card stat-card card-interactive">
+    <div class="stat-header">
+      <span class="stat-title">Savings Rate</span>
+      <div class="stat-icon-box stat-icon-savings">🎯</div>
+    </div>
+    <div class="stat-value" style="color: {% if summary.savings_percentage >= 20 %}var(--income-green){% elif summary.savings_percentage > 0 %}var(--warning-amber){% else %}var(--expense-rose){% endif %};">
+      {{ summary.savings_percentage }}%
+    </div>
+    <div class="stat-meta">
+      <span>Target: 20.0% or higher</span>
+    </div>
+  </div>
+</div>
+
+<!-- Visual Charts Section (Grid: 2fr Trends, 1fr Category Donut) -->
+<div class="charts-grid">
+  <!-- Monthly Cash Flow Trend Chart -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div>
+        <h3>Cash Flow Trajectory</h3>
+        <p style="font-size: 0.8rem; color: var(--text-dim);">6-Month historical comparison (Inflows vs Outflows)</p>
+      </div>
+      <a href="{{ url_for('analytics.view_analytics') }}" class="btn btn-secondary btn-sm">Full Analytics →</a>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="cashflowTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Expense Distribution Doughnut Chart -->
+  <div class="card">
+    <div style="margin-bottom: 16px;">
+      <h3>Expense Breakdown</h3>
+      <p style="font-size: 0.8rem; color: var(--text-dim);">Categorical spending distribution</p>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="categoryDonutChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity Ledger & Quick Stats -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+  <!-- Recent Transactions Table -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3>Recent Financial Activity</h3>
+      <div style="display: flex; gap: 8px;">
+        <a href="{{ url_for('income.list_income') }}" class="btn btn-secondary btn-sm">+ Income</a>
+        <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-primary btn-sm">+ Expense</a>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Source / Category</th>
+            <th>Date</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if recent_transactions %}
+            {% for tx in recent_transactions %}
+              <tr>
+                <td>
+                  {% if tx.type == 'income' %}
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">Inflow</span>
+                  {% else %}
+                    <span class="badge badge-{{ tx.category_or_source|lower }}">Outflow</span>
+                  {% endif %}
+                </td>
+                <td style="font-weight: 500;">
+                  {{ tx.category_or_source }}
+                  {% if tx.description %}
+                    <div style="font-size: 0.76rem; color: var(--text-dim);">{{ tx.description }}</div>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.85rem; color: var(--text-muted);">
+                  {{ tx.date.strftime('%d %b') }}
+                </td>
+                <td style="text-align: right; font-weight: 700; color: {% if tx.type == 'income' %}var(--income-green){% else %}var(--expense-rose){% endif %};">
+                  {% if tx.type == 'income' %}+{% else %}-{% endif %}{{ current_user.currency }}{{ "%.2f"|format(tx.amount) }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 28px; color: var(--text-dim);">
+                No recent transactions logged. Add income or expenses to see your stream.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Velocity & Budget Overview Card -->
+  <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <h3 style="margin-bottom: 8px;">Burn Rate Velocity</h3>
+      <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 20px;">
+        Daily spending rate based on {{ velocity.days_elapsed }} day{% if velocity.days_elapsed != 1 %}s{% endif %} in current period.
+      </p>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px;">
+        <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Average Daily Burn</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">
+          {{ current_user.currency }}{{ "%.2f"|format(velocity.average_daily_spend) }}
+        </div>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+        <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim);">Projected Month-End Spend</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: {% if velocity.projected_spend > summary.total_income and summary.total_income > 0 %}var(--expense-rose){% else %}#38bdf8{% endif %};">
+          {{ current_user.currency }}{{ "%.2f"|format(velocity.projected_spend) }}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle); text-align: center;">
+      <a href="{{ url_for('budget.view_budgets') }}" class="btn btn-secondary" style="width: 100%;">
+        Manage Monthly Budgets
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js 4.4 Library via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Dashboard Visualization Engine -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -8,23 +8,46 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / '.env')
 
-# Ensure local database directory exists
-DB_DIR = BASE_DIR / 'database'
-DB_DIR.mkdir(parents=True, exist_ok=True)
-DEFAULT_DB_FILE = (DB_DIR / 'finance.db').resolve()
+# Check if running in Vercel Serverless environment
+IS_VERCEL = bool(os.getenv('VERCEL'))
+
+# Ensure local database directory exists (handle read-only filesystem gracefully)
+import tempfile
+
+if IS_VERCEL:
+    DB_DIR = Path(tempfile.gettempdir())
+    DEFAULT_DB_FILE = (DB_DIR / 'finance.db').resolve()
+else:
+    DB_DIR = BASE_DIR / 'database'
+    try:
+        DB_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    DEFAULT_DB_FILE = (DB_DIR / 'finance.db').resolve()
 
 class Config:
     """Base application configuration with robust cross-platform path resolution."""
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev_insecure_fallback_key_2026')
     
-    # SQLite Database URI configuration
-    # Resolves relative sqlite:/// URIs against project root to prevent Flask-SQLAlchemy instance-folder traps
+    # Database URI configuration
     raw_db_url = os.getenv('DATABASE_URL', '')
-    if raw_db_url.startswith('sqlite:///') and not raw_db_url.startswith('sqlite:////'):
+    if raw_db_url.startswith('postgres://'):
+        # SQLAlchemy 1.4+ dialect compatibility
+        raw_db_url = raw_db_url.replace('postgres://', 'postgresql://', 1)
+
+    if IS_VERCEL:
+        if raw_db_url and not raw_db_url.startswith('sqlite'):
+            SQLALCHEMY_DATABASE_URI = raw_db_url
+        else:
+            SQLALCHEMY_DATABASE_URI = f"sqlite:///{DEFAULT_DB_FILE.as_posix()}"
+    elif raw_db_url.startswith('sqlite:///') and not raw_db_url.startswith('sqlite:////'):
         rel_path = raw_db_url.replace('sqlite:///', '')
         if not (Path(rel_path).is_absolute() or ':' in rel_path):
             resolved_path = (BASE_DIR / rel_path).resolve()
-            resolved_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                resolved_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
             SQLALCHEMY_DATABASE_URI = f"sqlite:///{resolved_path.as_posix()}"
         else:
             SQLALCHEMY_DATABASE_URI = raw_db_url

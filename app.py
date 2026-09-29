@@ -19,8 +19,12 @@ def create_app(config_name: str = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_by_name.get(config_name, config_by_name['default']))
 
-    # Ensure database parent directory exists
-    os.makedirs(os.path.join(app.root_path, 'database'), exist_ok=True)
+    # Ensure database parent directory exists (skipped if read-only or in serverless)
+    try:
+        if not os.getenv('VERCEL'):
+            os.makedirs(os.path.join(app.root_path, 'database'), exist_ok=True)
+    except OSError:
+        pass
 
     # Initialize database extensions
     db.init_app(app)

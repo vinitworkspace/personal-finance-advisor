@@ -5,22 +5,39 @@
 ---
 
 ## 📋 Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Key Features](#-key-features)
-3. [User Scenarios Supported](#-user-scenarios-supported)
-4. [System Architecture](#-system-architecture)
-5. [Database Schema & ER Design](#-database-schema--er-design)
-6. [Technology Stack](#-technology-stack)
-7. [Installation & Windows Setup Guide](#-installation--windows-setup-guide)
-8. [Environment Configuration & API Keys](#-environment-configuration--api-keys)
-9. [Running the Application](#-running-the-application)
-10. [REST API Documentation](#-rest-api-documentation)
-11. [Automated Testing & Manual Checklist](#-automated-testing--manual-checklist)
-12. [Cybersecurity & Data Privacy Implementation](#-cybersecurity--data-privacy-implementation)
-13. [Deployment Guide (Render / PythonAnywhere)](#-deployment-guide)
-14. [Git & GitHub Setup Guide](#-git--github-setup-guide)
-15. [Viva Defense Guide & Q&A](#-viva-defense-guide--qa)
-16. [Future Improvements](#-future-improvements)
+1. [Documentation Suite (`docs/`)](#-documentation-suite-for-learning--viva)
+2. [Project Overview](#-project-overview)
+3. [Key Features](#-key-features)
+4. [User Scenarios Supported](#-user-scenarios-supported)
+5. [System Architecture](#-system-architecture)
+6. [Database Schema & ER Design](#-database-schema--er-design)
+7. [Technology Stack](#-technology-stack)
+8. [Installation & Windows Setup Guide](#-installation--windows-setup-guide)
+9. [Environment Configuration & API Keys](#-environment-configuration--api-keys)
+10. [Running the Application in Browser](#-running-the-application-in-browser)
+11. [REST API Documentation](#-rest-api-documentation)
+12. [Automated Testing & Manual Checklist](#-automated-testing--manual-checklist)
+13. [Cybersecurity & Data Privacy Implementation](#-cybersecurity--data-privacy-implementation)
+14. [Deployment Guide (Render / PythonAnywhere)](#-deployment-guide)
+15. [Git & GitHub Setup Guide](#-git--github-setup-guide)
+16. [Viva Defense Guide & Q&A](#-viva-defense-guide--qa)
+17. [Future Improvements](#-future-improvements)
+
+---
+
+## 📚 Documentation Suite (For Learning & Viva)
+
+The project includes an in-depth, dedicated documentation library in the [`docs/`](./docs/) directory:
+
+- 📖 [**01. Architecture & Design Patterns**](./docs/01_ARCHITECTURE_AND_DESIGN.md): Multi-tier architecture, Blueprint pattern, Service layer pattern, and decorators.
+- 🗄️ [**02. Database Architecture & Models**](./docs/02_DATABASE_AND_MODELS.md): SQLite schema, ERD diagram, SQLAlchemy models, and cascading deletes.
+- 🔐 [**03. Security & Authentication**](./docs/03_SECURITY_AND_AUTHENTICATION.md): PBKDF2 password hashing, session fixation mitigation, IDOR defense, and XSS/CSRF security.
+- 🤖 [**04. AI Engine & Offline Fallback**](./docs/04_AI_ENGINE_AND_FALLBACK.md): Gemini 1.5 Flash client, prompt engineering, and offline heuristic rules engine.
+- 📐 [**05. Financial Mathematics & Algorithms**](./docs/05_FINANCIAL_MATHEMATICS_AND_FORMULAS.md): Formulas for Net Balance, Savings Rate %, Daily Velocity, Month-End Projections, and 50/30/20 benchmarks.
+- 📡 [**06. Complete REST API Reference**](./docs/06_API_REFERENCE.md): Full catalogue of HTTP endpoints, parameters, and JSON response models.
+- 🖥️ [**07. How to Run & Complete Browser Guide**](./docs/07_HOW_TO_RUN_AND_BROWSER_GUIDE.md): Step-by-step setup, one-click launcher scripts, demo logins, and page-by-page tour.
+- 🎓 [**08. Viva Questions & Model Answers**](./docs/08_VIVA_QUESTIONS_AND_ANSWERS.md): 18+ high-impact viva voce questions and model answers across engineering, security, database, and AI.
+- 📄 [**Personal_Finance_Advisor_Bot_Documentation.docx**](./docs/Personal_Finance_Advisor_Bot_Documentation.docx): **Complete Compiled Microsoft Word Project Report** containing all 8 chapters, formatted tables, code boxes, and title page.
 
 ---
 
@@ -224,25 +241,45 @@ The application reads secrets from `.env`. A default `.env` is created automatic
 
 ---
 
-## 🚀 Running the Application
+## 🚀 Running the Application in Browser
 
 ### 1. Initialize and Seed the SQLite Database
 ```powershell
 python init_db.py
 ```
-*Creates all database tables and seeds a sample student account (`demo@finance.test` with password `Password123!`).*
+*Creates all database tables and seeds 6 months of realistic transactions for the demo account (`demo_user` with password `DemoPass@123`).*
 
-### 2. Start the Development Web Server
+### 2. Launch the Application & Open Browser
+
+You can start the app and automatically open your default browser using any of these methods:
+
+#### Method A: One-Click Windows Batch Launcher (Double-Click or Command)
+```cmd
+.\run_app.bat
+```
+*(Automatically activates virtual environment if present, launches Flask, and opens `http://127.0.0.1:5000` in your default browser).*
+
+#### Method B: PowerShell Launcher
+```powershell
+.\run_app.ps1
+```
+
+#### Method C: Python Browser Launcher
+```powershell
+python run_app.py
+```
+
+#### Method D: Standard Flask Server
 ```powershell
 python app.py
 ```
+*Then manually open your browser to **`http://127.0.0.1:5000`**.*
 
-### 3. Open in Browser
-Open your browser and navigate to:
-👉 **`http://127.0.0.1:5000`**
-
-- On the login page, click **`⚡ Quick Demo Account`** to instantly populate the credentials.
-- Click **Sign In** to access your dashboard.
+### 3. Log In to the Dashboard
+- On the login page, click **`⚡ Quick Demo Fill`** to automatically populate:
+  - **Username**: `demo_user`
+  - **Password**: `DemoPass@123`
+- Click **Sign In** to access your dashboard. For a complete UI tour and screenshot walkthrough, see [**`docs/07_HOW_TO_RUN_AND_BROWSER_GUIDE.md`**](./docs/07_HOW_TO_RUN_AND_BROWSER_GUIDE.md).
 
 ---
 

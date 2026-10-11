@@ -97,7 +97,7 @@
 </div>
 
 <!-- Category Budgets Grid -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+<div class="budget-cards-grid">
   {% if status.budget_list %}
     {% for item in status.budget_list %}
       <div class="card card-interactive" style="border-left: 4px solid {% if item.status == 'danger' %}var(--expense-rose){% elif item.status == 'warning' %}var(--warning-amber){% else %}var(--income-green){% endif %};">

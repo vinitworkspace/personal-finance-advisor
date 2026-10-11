@@ -32,12 +32,8 @@ class VercelWSGIMiddleware:
 
     def __call__(self, environ, start_response):
         path = environ.get('PATH_INFO', '')
-
-        # Inspect Vercel edge headers for original client request path
-        forwarded_path = environ.get('HTTP_X_FORWARDED_PATH') or environ.get('HTTP_X_MATCHED_PATH')
-        if forwarded_path and forwarded_path != path and not forwarded_path.startswith('/api/index'):
-            environ['PATH_INFO'] = forwarded_path
-            path = forwarded_path
+        print("[VERCEL_DEBUG_PATH]", path)
+        print("[VERCEL_DEBUG_ENV]", {k: str(v) for k, v in environ.items() if not k.startswith('wsgi.') and not k.startswith('SERVER_')})
 
         # If PATH_INFO is directly targeting the serverless entrypoint
         if path in ('/api/index.py', '/api/index', '/api', '/api/'):

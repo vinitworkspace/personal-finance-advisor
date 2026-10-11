@@ -241,37 +241,58 @@
 
         <!-- UPI Tab Content -->
         <div id="tab-upi" class="payment-tab-content">
-          <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle); margin-bottom: 14px;">
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Scan with Any UPI App (GPay / PhonePe / Paytm)</div>
-            <!-- Dynamic SVG QR Code Simulation -->
-            <svg width="120" height="120" viewBox="0 0 120 120" style="background: #fff; padding: 6px; border-radius: 8px;">
-              <rect x="10" y="10" width="30" height="30" fill="#0f172a" />
-              <rect x="16" y="16" width="18" height="18" fill="#fff" />
-              <rect x="20" y="20" width="10" height="10" fill="#0f172a" />
-              
-              <rect x="80" y="10" width="30" height="30" fill="#0f172a" />
-              <rect x="86" y="16" width="18" height="18" fill="#fff" />
-              <rect x="90" y="20" width="10" height="10" fill="#0f172a" />
+          <div style="text-align: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle); margin-bottom: 14px;">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;">Scan with GPay, PhonePe, Paytm, or Any UPI App</div>
+            
+            <!-- Real Uploaded Google Pay QR Code -->
+            <div style="display: inline-block; padding: 6px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35); margin-bottom: 10px;">
+              <img 
+                src="{{ url_for('static', filename='img/upi_qr.jpg') }}" 
+                alt="Google Pay UPI QR Code" 
+                style="width: 170px; height: 170px; object-fit: contain; display: block; border-radius: 8px;"
+              >
+            </div>
 
-              <rect x="10" y="80" width="30" height="30" fill="#0f172a" />
-              <rect x="16" y="86" width="18" height="18" fill="#fff" />
-              <rect x="20" y="90" width="10" height="10" fill="#0f172a" />
+            <!-- UPI ID Badge with 1-Click Copy -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+              <div style="font-size: 0.88rem; color: #34d399; font-weight: 800; background: rgba(16, 185, 129, 0.12); padding: 5px 12px; border-radius: var(--radius-full); border: 1px solid rgba(16, 185, 129, 0.3); font-family: monospace;">
+                vnawate098-1@oksbi
+              </div>
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-sm" 
+                onclick="copyUpiId('vnawate098-1@oksbi', this)"
+                style="padding: 4px 10px; font-size: 0.78rem;"
+              >
+                📋 Copy UPI ID
+              </button>
+            </div>
 
-              <!-- QR Data pixels -->
-              <rect x="46" y="20" width="8" height="8" fill="#0f172a" />
-              <rect x="60" y="32" width="12" height="6" fill="#0f172a" />
-              <rect x="52" y="52" width="16" height="16" fill="#6366f1" />
-              <rect x="20" y="52" width="8" height="8" fill="#0f172a" />
-              <rect x="80" y="60" width="14" height="8" fill="#0f172a" />
-              <rect x="46" y="84" width="12" height="14" fill="#0f172a" />
-              <rect x="74" y="88" width="16" height="12" fill="#0f172a" />
-            </svg>
-            <div style="font-size: 0.8rem; color: var(--income-green); font-weight: 700; margin-top: 8px;">UPI ID: vinzie@upi (₹100)</div>
+            <!-- Direct Mobile UPI App Link -->
+            <div style="margin-top: 10px;">
+              <a 
+                href="upi://pay?pa=vnawate098-1@oksbi&pn=VinZie%20Budget%20Tracker&am=100&cu=INR" 
+                class="btn btn-primary btn-sm" 
+                style="font-size: 0.8rem; padding: 6px 14px; text-decoration: none;"
+              >
+                ⚡ Open in UPI App (Pay ₹100)
+              </a>
+            </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="upiId">Or Enter Your VPA / UPI ID</label>
-            <input type="text" id="upiId" class="form-control" placeholder="yourname@okhdfcbank" value="{{ current_user.email.split('@')[0] }}@upi">
+            <label class="form-label" for="utr_ref">UPI Ref / 12-Digit UTR Number (Optional)</label>
+            <input 
+              type="text" 
+              id="utr_ref" 
+              name="utr_ref" 
+              class="form-control" 
+              placeholder="e.g. 428190382910"
+              maxlength="30"
+            >
+            <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">
+              Enter UTR after paying, or click below for instant access confirmation.
+            </small>
           </div>
         </div>
 
@@ -365,6 +386,18 @@ function handleCheckoutSubmit(e) {
   .catch(err => {
     // If standard HTML redirect fallback
     document.getElementById('checkoutForm').submit();
+  });
+}
+function copyUpiId(upiId, btn) {
+  navigator.clipboard.writeText(upiId).then(() => {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    showToast('UPI ID copied to clipboard: ' + upiId, 'success');
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 2000);
+  }).catch(() => {
+    showToast('UPI ID: ' + upiId, 'info');
   });
 }
 </script>

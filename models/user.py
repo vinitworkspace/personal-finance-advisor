@@ -13,6 +13,12 @@ class User(db.Model):
     currency = db.Column(db.String(10), default='₹', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    # Extended Authentication: Phone, PIN code, Social, and Biometrics
+    phone_number = db.Column(db.String(20), nullable=True, unique=True, index=True)
+    pin_hash = db.Column(db.String(255), nullable=True)
+    biometric_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    auth_provider = db.Column(db.String(30), default='email', nullable=False) # 'email', 'google', 'apple', 'phone'
+
     # Monthly Subscription & Free Month Trial System (₹100/month after 30-day free trial)
     subscription_status = db.Column(db.String(20), default='trial', nullable=False) # 'trial', 'active', 'expired'
     trial_ends_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(days=30), nullable=True)
@@ -36,6 +42,19 @@ class User(db.Model):
         if not password or not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
+
+    def set_pin(self, pin: str) -> None:
+        """Hash and store 4 or 6-digit security PIN."""
+        clean_pin = str(pin).strip()
+        if not clean_pin.isdigit() or len(clean_pin) not in (4, 6):
+            raise ValueError("Security PIN must be exactly 4 or 6 digits.")
+        self.pin_hash = generate_password_hash(clean_pin)
+
+    def check_pin(self, pin: str) -> bool:
+        """Verify candidate PIN against stored cryptographic hash."""
+        if not pin or not self.pin_hash:
+            return False
+        return check_password_hash(self.pin_hash, str(pin).strip())
 
     def is_subscription_active(self) -> bool:
         """Check if user has an active 30-day free trial or paid active subscription."""
@@ -114,6 +133,10 @@ class User(db.Model):
             'id': self.id,
             'name': self.name,
             'email': self.email,
+            'phone_number': self.phone_number,
+            'has_pin': bool(self.pin_hash),
+            'biometric_enabled': bool(self.biometric_enabled),
+            'auth_provider': self.auth_provider,
             'currency': self.currency,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'subscription': self.get_subscription_info()

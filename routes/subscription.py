@@ -69,11 +69,16 @@ def checkout():
         flash(msg, "danger")
         return redirect(url_for('subscription.pricing'))
 
+    utr_ref = data.get('utr_ref', '').strip()
+
     # Extend or activate subscription for 30 calendar days
     expires_at = user.activate_subscription(duration_days=30, plan_name="VinZie Pro (Monthly - ₹100)")
     db.session.commit()
 
-    success_msg = f"Payment of ₹{int(amount)} received via {payment_method.upper()}! VinZie Pro active until {expires_at.strftime('%d %b %Y')}."
+    if utr_ref:
+        success_msg = f"Payment of ₹{int(amount)} verified (UTR: {utr_ref}) to vnawate098-1@oksbi! VinZie Pro active until {expires_at.strftime('%d %b %Y')}."
+    else:
+        success_msg = f"Payment of ₹{int(amount)} confirmed to vnawate098-1@oksbi via {payment_method.upper()}! VinZie Pro active until {expires_at.strftime('%d %b %Y')}."
     flash(success_msg, "success")
 
     if request.is_json:

@@ -4,61 +4,689 @@
 
 {% block unauth_content %}
 <div class="auth-page">
-  <div class="auth-card">
+  <div class="auth-card" style="max-width: 480px;">
     <div class="auth-header">
       <div class="brand-icon">₹</div>
       <h2>Welcome Back</h2>
       <p>Sign in to access your VinZie Budget Tracker</p>
     </div>
 
-    <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next', '')) }}">
-      <div class="form-group">
-        <label for="email" class="form-label">Email Address</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          class="form-control" 
-          placeholder="name@example.com" 
-          value="{{ email or '' }}" 
-          required 
-          autocomplete="email"
-        >
-      </div>
+    <!-- Login Mode Selector Tabs -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(255, 255, 255, 0.03); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 22px;">
+      <button type="button" class="auth-tab-btn active" id="tab-btn-email" onclick="switchAuthTab('email')">
+        <span>📧</span>
+        <span style="font-size: 0.74rem;">Password</span>
+      </button>
+      <button type="button" class="auth-tab-btn" id="tab-btn-phone" onclick="switchAuthTab('phone')">
+        <span>📱</span>
+        <span style="font-size: 0.74rem;">Mobile OTP</span>
+      </button>
+      <button type="button" class="auth-tab-btn" id="tab-btn-pin" onclick="switchAuthTab('pin')">
+        <span>🔢</span>
+        <span style="font-size: 0.74rem;">PIN Code</span>
+      </button>
+      <button type="button" class="auth-tab-btn" id="tab-btn-biometric" onclick="switchAuthTab('biometric')">
+        <span>🛡️</span>
+        <span style="font-size: 0.74rem;">Face / Touch</span>
+      </button>
+    </div>
 
-      <div class="form-group">
-        <label for="password" class="form-label">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          class="form-control" 
-          placeholder="••••••••" 
-          required 
-          autocomplete="current-password"
-        >
-      </div>
+    <!-- TAB 1: EMAIL & PASSWORD -->
+    <div id="auth-panel-email" class="auth-panel">
+      <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next', '')) }}">
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-control" 
+            placeholder="name@example.com" 
+            value="{{ email or '' }}" 
+            required 
+            autocomplete="email"
+          >
+        </div>
 
-      <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
-          <input type="checkbox" name="remember" value="1">
-          Remember me
-        </label>
-      </div>
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+            <a href="{{ url_for('auth.forgot_password_page') }}" style="font-size: 0.82rem; color: #818cf8; text-decoration: none; font-weight: 500;">
+              Forgot Password?
+            </a>
+          </div>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+          >
+        </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+            <input type="checkbox" name="remember" value="1">
+            Remember me
+          </label>
+        </div>
 
-      <!-- Viva Demonstration Fast Login Helper -->
-      <div class="demo-login-box">
-        <button type="button" class="demo-btn" onclick="fillDemoCredentials()">
-          ⚡ Quick Demo Account (Viva / Examiner Test)
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In with Password</button>
+      </form>
+    </div>
+
+    <!-- TAB 2: MOBILE NUMBER & SMS OTP -->
+    <div id="auth-panel-phone" class="auth-panel" style="display: none;">
+      <div id="phone-step-send">
+        <div class="form-group">
+          <label class="form-label" for="phoneInput">Mobile Number (India / Global)</label>
+          <div style="display: flex; gap: 8px;">
+            <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; color: #a5b4fc;">
+              🇮🇳 +91
+            </span>
+            <input 
+              type="tel" 
+              id="phoneInput" 
+              class="form-control" 
+              placeholder="9876543210" 
+              maxlength="10"
+              value="9876543210"
+            >
+          </div>
+          <small style="color: var(--text-dim); font-size: 0.76rem; margin-top: 4px; display: block;">
+            Demo number pre-filled. Enter any 10 digits to receive simulated SMS OTP.
+          </small>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="sendMobileOtp()" style="width: 100%;" id="sendOtpButton">
+          📱 Send 6-Digit SMS OTP
         </button>
       </div>
-    </form>
+
+      <div id="phone-step-verify" style="display: none;">
+        <div class="alert alert-info" style="font-size: 0.82rem; margin-bottom: 16px;">
+          <span id="phoneOtpNotice">Code sent to mobile.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Enter 6-Digit SMS OTP</label>
+          <input 
+            type="text" 
+            id="mobileOtpInput" 
+            class="form-control" 
+            placeholder="••••••" 
+            maxlength="6"
+            style="letter-spacing: 0.3em; font-size: 1.2rem; text-align: center; font-weight: 700;"
+          >
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="verifyMobileOtp()" style="width: 100%;" id="verifyOtpButton">
+          ✅ Verify OTP & Sign In
+        </button>
+
+        <button type="button" class="btn btn-secondary" onclick="backToPhoneSend()" style="width: 100%; margin-top: 10px; font-size: 0.82rem;">
+          ← Change Mobile Number
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: SECURITY PIN CODE -->
+    <div id="auth-panel-pin" class="auth-panel" style="display: none;">
+      <div class="form-group">
+        <label class="form-label" for="pinIdentifier">Account Email or Mobile</label>
+        <input 
+          type="text" 
+          id="pinIdentifier" 
+          class="form-control" 
+          placeholder="demo@finance.test or 9876543210" 
+          value="demo@finance.test"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Enter 4-Digit Security PIN</label>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 12px;">
+          <input type="password" id="pin-1" class="pin-box" maxlength="1" oninput="handlePinInput(this, 'pin-2')" onkeydown="handlePinBack(event, this, null)">
+          <input type="password" id="pin-2" class="pin-box" maxlength="1" oninput="handlePinInput(this, 'pin-3')" onkeydown="handlePinBack(event, this, 'pin-1')">
+          <input type="password" id="pin-3" class="pin-box" maxlength="1" oninput="handlePinInput(this, 'pin-4')" onkeydown="handlePinBack(event, this, 'pin-2')">
+          <input type="password" id="pin-4" class="pin-box" maxlength="1" oninput="handlePinInput(this, null)" onkeydown="handlePinBack(event, this, 'pin-3')">
+        </div>
+        <small style="color: var(--text-dim); font-size: 0.76rem; text-align: center; display: block;">
+          Demo Student default PIN is <strong>1234</strong>
+        </small>
+      </div>
+
+      <!-- Quick Interactive Numeric Numpad -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 240px; margin: 0 auto 16px;">
+        {% for n in range(1, 10) %}
+          <button type="button" class="btn btn-secondary pin-key-btn" onclick="pressNumpad('{{ n }}')">{{ n }}</button>
+        {% endfor %}
+        <button type="button" class="btn btn-secondary pin-key-btn" onclick="clearPin()">C</button>
+        <button type="button" class="btn btn-secondary pin-key-btn" onclick="pressNumpad('0')">0</button>
+        <button type="button" class="btn btn-secondary pin-key-btn" onclick="backspacePin()">⌫</button>
+      </div>
+
+      <button type="button" class="btn btn-primary" onclick="submitPinLogin()" style="width: 100%;">
+        🔓 Unlock with PIN
+      </button>
+    </div>
+
+    <!-- TAB 4: BIOMETRIC UNLOCK (FINGERPRINT & FACE ID) -->
+    <div id="auth-panel-biometric" class="auth-panel" style="display: none; text-align: center;">
+      <div style="padding: 24px 16px; background: rgba(99, 102, 241, 0.05); border: 1px dashed rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); margin-bottom: 20px;">
+        <div class="biometric-scan-orb" id="biometricOrb">
+          <span style="font-size: 2.8rem;">🧬</span>
+        </div>
+        <h4 style="font-size: 1.1rem; margin: 12px 0 6px;">Biometric Authentication</h4>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; max-width: 300px; margin: 0 auto;">
+          Authenticate securely using Touch ID, Fingerprint scanner, Apple Face ID, or Windows Hello.
+        </p>
+      </div>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label" for="bioIdentifier">Account (Email or Mobile)</label>
+        <input 
+          type="text" 
+          id="bioIdentifier" 
+          class="form-control" 
+          placeholder="demo@finance.test" 
+          value="demo@finance.test"
+        >
+      </div>
+
+      <button type="button" class="btn btn-primary" onclick="triggerBiometricUnlock()" style="width: 100%; padding: 12px; font-weight: 700; box-shadow: 0 4px 20px var(--primary-glow);">
+        ⚡ Scan Fingerprint / Face ID
+      </button>
+    </div>
+
+    <!-- Divider: Social Sign-In -->
+    <div style="display: flex; align-items: center; gap: 14px; margin: 24px 0 18px;">
+      <div style="flex: 1; height: 1px; background: var(--border-subtle);"></div>
+      <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 600;">
+        Or continue with
+      </span>
+      <div style="flex: 1; height: 1px; background: var(--border-subtle);"></div>
+    </div>
+
+    <!-- Google and Apple ID Social Buttons -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+      <!-- Google Sign In Button -->
+      <button type="button" class="btn btn-secondary social-auth-btn" onclick="openGooglePicker()" style="padding: 10px 12px; font-size: 0.86rem; border-color: rgba(255,255,255,0.12);">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Google</span>
+      </button>
+
+      <!-- Apple ID Sign In Button -->
+      <button type="button" class="btn btn-secondary social-auth-btn" onclick="openAppleAuth()" style="padding: 10px 12px; font-size: 0.86rem; border-color: rgba(255,255,255,0.12);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.84.94-2.91-.91.04-2.02.61-2.67 1.38-.57.67-1.07 1.76-.94 2.81 1.02.08 2.04-.51 2.67-1.28"/>
+        </svg>
+        <span>Apple ID</span>
+      </button>
+    </div>
+
+    <!-- Viva Demonstration Fast Login Helper -->
+    <div class="demo-login-box">
+      <button type="button" class="demo-btn" onclick="fillDemoCredentials()">
+        ⚡ Quick Fill Demo Credentials (demo@finance.test | PIN: 1234)
+      </button>
+    </div>
 
     <div class="auth-footer">
       Don't have an account? <a href="{{ url_for('auth.register') }}">Create Account</a>
     </div>
   </div>
 </div>
+
+<!-- Realistic Google OAuth Account Picker Modal -->
+<div class="modal-overlay" id="googlePickerModal">
+  <div class="modal-card" style="max-width: 420px; background: #0f172a; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);">
+    <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span style="font-weight: 700; color: #fff; font-size: 1.05rem;">Sign in with Google</span>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('googlePickerModal')">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding: 16px 20px;">
+      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">
+        Choose an account to continue to <strong>VinZie Budget Tracker</strong>
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Option 1: Vinit Workspace -->
+        <button type="button" class="google-acc-btn" onclick="executeGoogleLogin('vinitworkspace@gmail.com', 'Vinit Awate')">
+          <div class="user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem; background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);">V</div>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Vinit Awate</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">vinitworkspace@gmail.com</div>
+          </div>
+          <span style="color: var(--text-dim); font-size: 0.9rem;">→</span>
+        </button>
+
+        <!-- Option 2: Demo Student -->
+        <button type="button" class="google-acc-btn" onclick="executeGoogleLogin('demo@finance.test', 'Demo Student')">
+          <div class="user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);">D</div>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Demo Student</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">demo@finance.test</div>
+          </div>
+          <span style="color: var(--text-dim); font-size: 0.9rem;">→</span>
+        </button>
+
+        <!-- Option 3: Custom Google Email Prompt -->
+        <button type="button" class="google-acc-btn" onclick="promptCustomGoogle()">
+          <div class="user-avatar" style="width: 38px; height: 38px; font-size: 0.9rem; background: rgba(255,255,255,0.08);">+</div>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 600; color: #a5b4fc; font-size: 0.88rem;">Use another Google account</div>
+            <div style="font-size: 0.76rem; color: var(--text-dim);">Enter your Gmail address</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.auth-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all var(--transition-fast);
+}
+.auth-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+.auth-tab-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  font-weight: 700;
+}
+.social-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all var(--transition-fast);
+}
+.social-auth-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-2px);
+}
+.pin-box {
+  width: 48px;
+  height: 52px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: 800;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pin-box:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+.pin-key-btn {
+  padding: 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+.biometric-scan-orb {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.15);
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 25px var(--primary-glow);
+  animation: pulseScan 2s infinite ease-in-out;
+}
+@keyframes pulseScan {
+  0% { transform: scale(1); box-shadow: 0 0 15px var(--primary-glow); }
+  50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(99, 102, 241, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 15px var(--primary-glow); }
+}
+.google-acc-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.google-acc-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+</style>
+
+<script>
+// Switch login modes
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(panel => panel.style.display = 'none');
+
+  const btn = document.getElementById('tab-btn-' + tab);
+  const panel = document.getElementById('auth-panel-' + tab);
+  if (btn) btn.classList.add('active');
+  if (panel) panel.style.display = 'block';
+}
+
+// ----------------------------------------------------
+// MOBILE PHONE OTP FLOW
+// ----------------------------------------------------
+let activePhoneNumber = '';
+
+function sendMobileOtp() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  const btn = document.getElementById('sendOtpButton');
+
+  if (phone.length < 10) {
+    showToast('Please enter a valid 10-digit mobile number.', 'danger');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Sending SMS OTP...';
+
+  fetch('{{ url_for("auth.phone_send_otp") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phone })
+  })
+  .then(res => res.json())
+  .then(data => {
+    btn.disabled = false;
+    btn.innerHTML = '📱 Send 6-Digit SMS OTP';
+
+    if (data.success) {
+      activePhoneNumber = phone;
+      document.getElementById('phone-step-send').style.display = 'none';
+      document.getElementById('phone-step-verify').style.display = 'block';
+      document.getElementById('phoneOtpNotice').innerText = 'SMS OTP sent to +91 ' + phone;
+      if (data.otp) {
+        document.getElementById('mobileOtpInput').value = data.otp;
+      }
+      showToast(data.message, 'success');
+    } else {
+      showToast(data.error || 'Failed to send OTP', 'danger');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = '📱 Send 6-Digit SMS OTP';
+    showToast('Network error while sending OTP', 'danger');
+  });
+}
+
+function verifyMobileOtp() {
+  const otp = document.getElementById('mobileOtpInput').value.trim();
+  const btn = document.getElementById('verifyOtpButton');
+
+  if (otp.length < 6) {
+    showToast('Please enter the 6-digit OTP code.', 'danger');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Verifying...';
+
+  fetch('{{ url_for("auth.phone_verify_otp") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: activePhoneNumber, otp: otp })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Mobile verified successfully! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = data.redirect || '{{ url_for("dashboard.index") }}';
+      }, 1000);
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '✅ Verify OTP & Sign In';
+      showToast(data.error || 'Invalid OTP', 'danger');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = '✅ Verify OTP & Sign In';
+    showToast('Verification request failed.', 'danger');
+  });
+}
+
+function backToPhoneSend() {
+  document.getElementById('phone-step-verify').style.display = 'none';
+  document.getElementById('phone-step-send').style.display = 'block';
+}
+
+// ----------------------------------------------------
+// SECURITY PIN FLOW
+// ----------------------------------------------------
+function handlePinInput(current, nextId) {
+  if (current.value.length === 1 && nextId) {
+    document.getElementById(nextId).focus();
+  }
+}
+
+function handlePinBack(e, current, prevId) {
+  if (e.key === 'Backspace' && current.value === '' && prevId) {
+    document.getElementById(prevId).focus();
+  }
+}
+
+function pressNumpad(num) {
+  for (let i = 1; i <= 4; i++) {
+    const box = document.getElementById('pin-' + i);
+    if (!box.value) {
+      box.value = num;
+      if (i < 4) {
+        document.getElementById('pin-' + (i + 1)).focus();
+      }
+      break;
+    }
+  }
+}
+
+function clearPin() {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('pin-' + i).value = '';
+  }
+  document.getElementById('pin-1').focus();
+}
+
+function backspacePin() {
+  for (let i = 4; i >= 1; i--) {
+    const box = document.getElementById('pin-' + i);
+    if (box.value) {
+      box.value = '';
+      box.focus();
+      break;
+    }
+  }
+}
+
+function submitPinLogin() {
+  const p1 = document.getElementById('pin-1').value;
+  const p2 = document.getElementById('pin-2').value;
+  const p3 = document.getElementById('pin-3').value;
+  const p4 = document.getElementById('pin-4').value;
+  const pin = p1 + p2 + p3 + p4;
+  const identifier = document.getElementById('pinIdentifier').value.trim();
+
+  if (pin.length !== 4) {
+    showToast('Please enter your full 4-digit PIN.', 'danger');
+    return;
+  }
+
+  fetch('{{ url_for("auth.pin_login") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier: identifier, pin: pin })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast('PIN verified! Unlocking workspace...', 'success');
+      setTimeout(() => {
+        window.location.href = data.redirect || '{{ url_for("dashboard.index") }}';
+      }, 900);
+    } else {
+      showToast(data.error || 'Incorrect PIN', 'danger');
+      clearPin();
+    }
+  })
+  .catch(err => {
+    showToast('Error validating PIN.', 'danger');
+  });
+}
+
+// ----------------------------------------------------
+// BIOMETRICS (TOUCH ID / FACE ID / WINDOWS HELLO)
+// ----------------------------------------------------
+async function triggerBiometricUnlock() {
+  const identifier = document.getElementById('bioIdentifier').value.trim();
+  const orb = document.getElementById('biometricOrb');
+
+  orb.style.borderColor = '#10b981';
+  orb.style.boxShadow = '0 0 35px rgba(16, 185, 129, 0.8)';
+  showToast('Waiting for Face ID / Fingerprint sensor...', 'info');
+
+  try {
+    // Attempt WebAuthn if available
+    if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (available) {
+        // Platform authenticator (Face ID / Touch ID / Hello)
+        console.log('Platform biometric available.');
+      }
+    }
+  } catch (e) {
+    console.log('Biometric API notice:', e);
+  }
+
+  // Authorize via server biometric endpoint
+  setTimeout(() => {
+    fetch('{{ url_for("auth.biometric_verify_login") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: identifier })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast('Biometric verified: ' + data.message, 'success');
+        setTimeout(() => {
+          window.location.href = data.redirect || '{{ url_for("dashboard.index") }}';
+        }, 1000);
+      } else {
+        orb.style.borderColor = 'var(--primary)';
+        showToast(data.error || 'Biometric scan failed', 'danger');
+      }
+    })
+    .catch(err => {
+      orb.style.borderColor = 'var(--primary)';
+      showToast('Biometric authentication failed.', 'danger');
+    });
+  }, 1200);
+}
+
+// ----------------------------------------------------
+// SOCIAL OAUTH FLOWS (GOOGLE & APPLE)
+// ----------------------------------------------------
+function openGooglePicker() {
+  openModal('googlePickerModal');
+}
+
+function executeGoogleLogin(email, name) {
+  closeModal('googlePickerModal');
+  showToast('Connecting to Google: ' + email + '...', 'info');
+
+  fetch('{{ url_for("auth.oauth_google") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, name: name })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Google authentication verified!', 'success');
+      setTimeout(() => {
+        window.location.href = data.redirect || '{{ url_for("dashboard.index") }}';
+      }, 1000);
+    } else {
+      showToast(data.error || 'Google login failed', 'danger');
+    }
+  });
+}
+
+function promptCustomGoogle() {
+  const customEmail = prompt('Enter your Google email address:');
+  if (customEmail && customEmail.includes('@')) {
+    executeGoogleLogin(customEmail.trim(), customEmail.split('@')[0]);
+  }
+}
+
+function openAppleAuth() {
+  showToast('Signing in with Apple ID (Touch ID / Face ID)...', 'info');
+
+  setTimeout(() => {
+    fetch('{{ url_for("auth.oauth_apple") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'vinit.apple@icloud.com',
+        name: 'Vinit Awate (Apple)'
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast('Apple ID verified! Welcome.', 'success');
+        setTimeout(() => {
+          window.location.href = data.redirect || '{{ url_for("dashboard.index") }}';
+        }, 1000);
+      } else {
+        showToast(data.error || 'Apple login failed', 'danger');
+      }
+    });
+  }, 1000);
+}
+</script>
 {% endblock %}

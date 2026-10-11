@@ -60,6 +60,70 @@
     </form>
   </div>
 
+  <!-- Security & Biometrics Card -->
+  <div class="card" style="border-color: rgba(99, 102, 241, 0.35);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h3 style="margin: 0;">Security PIN & Biometrics</h3>
+      <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+        🛡️ High Security
+      </span>
+    </div>
+    <p style="font-size: 0.84rem; color: var(--text-dim); margin-bottom: 18px;">
+      Fast numerical PIN unlock and biometric authentication (Face ID / Fingerprint / Windows Hello).
+    </p>
+
+    <!-- PIN Form -->
+    <form method="POST" action="{{ url_for('auth.set_security_pin') }}" style="margin-bottom: 20px;">
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="securityPinInput" class="form-label" style="display: flex; justify-content: space-between;">
+          <span>Set 4-Digit Security PIN</span>
+          <span style="font-size: 0.78rem; color: {% if current_user.pin_hash %}#34d399{% else %}var(--text-dim){% endif %}; font-weight: 600;">
+            {% if current_user.pin_hash %}✓ PIN Active{% else %}No PIN Configured{% endif %}
+          </span>
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <input 
+            type="password" 
+            id="securityPinInput" 
+            name="pin" 
+            class="form-control" 
+            placeholder="e.g. 1234" 
+            maxlength="4" 
+            pattern="[0-9]{4}"
+            required
+            style="letter-spacing: 0.25em; font-weight: 700; font-size: 1.1rem; text-align: center;"
+          >
+          <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 0 16px;">
+            Save PIN
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Biometrics Toggle -->
+    <div style="background: rgba(15, 23, 42, 0.6); padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="font-weight: 700; font-size: 0.9rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+          <span>🧬</span> Touch ID / Face Unlock
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 2px;">
+          WebAuthn Biometric platform authenticator
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.toggle_biometrics') }}">
+        <input type="hidden" name="enabled" value="{% if current_user.biometric_enabled %}0{% else %}1{% endif %}">
+        <button type="submit" class="btn btn-sm {% if current_user.biometric_enabled %}btn-secondary{% else %}btn-primary{% endif %}" style="font-size: 0.8rem;">
+          {% if current_user.biometric_enabled %}
+            ✅ Enabled (Turn Off)
+          {% else %}
+            ⚡ Enable Biometrics
+          {% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Subscription & Membership Card -->
   <div class="card" style="border-color: var(--primary); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);">
     {% set sub = current_user.get_subscription_info() %}

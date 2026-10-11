@@ -21,6 +21,14 @@ def ensure_schema_migrations():
                     conn.execute(text("ALTER TABLE users ADD COLUMN subscription_expires_at DATETIME"))
                 if 'subscription_plan' not in columns:
                     conn.execute(text("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'VinZie Free Trial (1 Month)' NOT NULL"))
+                if 'phone_number' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(20)"))
+                if 'pin_hash' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN pin_hash VARCHAR(255)"))
+                if 'biometric_enabled' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN biometric_enabled BOOLEAN DEFAULT 0 NOT NULL"))
+                if 'auth_provider' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN auth_provider VARCHAR(30) DEFAULT 'email' NOT NULL"))
     except Exception as err:
         print(f"[Schema Migration Warning] {err}")
 
@@ -34,13 +42,23 @@ def seed_demo_data():
         demo_user = User(
             name="Demo Student",
             email="demo@finance.test",
+            phone_number="9876543210",
+            biometric_enabled=True,
             currency="₹",
             subscription_status="trial",
             subscription_plan="VinZie Free Trial (1 Month)"
         )
         demo_user.set_password("Password123!")
+        demo_user.set_pin("1234")
         db.session.add(demo_user)
         db.session.commit()
+    else:
+        if not demo_user.pin_hash:
+            demo_user.set_pin("1234")
+            demo_user.biometric_enabled = True
+            if not demo_user.phone_number:
+                demo_user.phone_number = "9876543210"
+            db.session.commit()
 
         # Seed sample income
         sample_income = Income(

@@ -177,5 +177,82 @@ class TestAuth(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('image/svg+xml', response.content_type)
 
+    def test_forgot_password_flow(self):
+        """Test password reset request and reset verification."""
+        user = User(name="Reset User", email="reset@example.com")
+        user.set_password("OldPassword123")
+        db.session.add(user)
+        db.session.commit()
+
+        # 1. Request OTP
+        req_res = self.client.post('/forgot-password/request-otp', json={'email': 'reset@example.com'})
+        self.assertEqual(req_res.status_code, 200)
+        req_data = req_res.get_json()
+        self.assertTrue(req_data['success'])
+        otp = req_data['otp']
+
+        # 2. Reset password using OTP
+        reset_res = self.client.post('/forgot-password/reset', json={
+            'email': 'reset@example.com',
+            'otp': otp,
+            'new_password': 'NewPassword123!',
+            'confirm_password': 'NewPassword123!'
+        })
+        self.assertEqual(reset_res.status_code, 200)
+
+        # 3. Verify user can now log in with new password
+        db.session.refresh(user)
+        self.assertTrue(user.check_password('NewPassword123!'))
+
+    def test_google_oauth_login(self):
+        """Test Google OAuth authentication and account auto-creation."""
+        res = self.client.post('/auth/oauth/google', json={
+            'email': 'oauth.test@gmail.com',
+            'name': 'OAuth Google User'
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data['success'])
+
+        user = User.query.filter_by(email='oauth.test@gmail.com').first()
+        self.assertIsNotNone(user)
+        self.assertEqual(user.name, 'OAuth Google User')
+        self.assertEqual(user.auth_provider, 'google')
+
+    def test_phone_otp_login(self):
+        """Test sending and verifying phone OTP."""
+        # 1. Send OTP
+        send_res = self.client.post('/auth/phone/send-otp', json={'phone_number': '9876543210'})
+        self.assertEqual(send_res.status_code, 200)
+        send_data = send_res.get_json()
+        self.assertTrue(send_data['success'])
+        otp = send_data['otp']
+
+        # 2. Verify OTP
+        verify_res = self.client.post('/auth/phone/verify-otp', json={'phone_number': '9876543210', 'otp': otp})
+        self.assertEqual(verify_res.status_code, 200)
+        verify_data = verify_res.get_json()
+        self.assertTrue(verify_data['success'])
+
+        user = User.query.filter_by(phone_number='9876543210').first()
+        self.assertIsNotNone(user)
+
+    def test_pin_and_biometric_login(self):
+        """Test PIN code setting and biometric verification."""
+        user = User(name="Pin User", email="pin@example.com")
+        user.set_password("Password123")
+        user.set_pin("4321")
+        user.biometric_enabled = True
+        db.session.add(user)
+        db.session.commit()
+
+        # Test PIN login
+        pin_res = self.client.post('/auth/pin-login', json={'identifier': 'pin@example.com', 'pin': '4321'})
+        self.assertEqual(pin_res.status_code, 200)
+
+        # Test Biometric verification
+        bio_res = self.client.post('/api/auth/biometric/verify', json={'identifier': 'pin@example.com'})
+        self.assertEqual(bio_res.status_code, 200)
+
 if __name__ == '__main__':
     unittest.main()

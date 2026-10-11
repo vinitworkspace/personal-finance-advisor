@@ -10,6 +10,7 @@ from routes.budget import budget_bp
 from routes.analytics import analytics_bp
 from routes.ai import ai_bp
 from routes.reports import reports_bp
+from routes.subscription import subscription_bp
 
 def create_app(config_name: str = None) -> Flask:
     """Application factory for Personal Finance Advisor Bot."""
@@ -38,6 +39,7 @@ def create_app(config_name: str = None) -> Flask:
     app.register_blueprint(analytics_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(subscription_bp)
 
     # Context processor: make authenticated user accessible in all Jinja templates
     @app.context_processor

@@ -6,16 +6,37 @@ from datetime import date
 from sqlalchemy import inspect, text
 from models import db, User, Income, Expense, Budget, FinancialReport
 
+def ensure_schema_migrations():
+    """Ensure newly added subscription columns exist in SQLite database gracefully."""
+    try:
+        inspector = inspect(db.engine)
+        if 'users' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('users')]
+            with db.engine.begin() as conn:
+                if 'subscription_status' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN subscription_status VARCHAR(20) DEFAULT 'trial' NOT NULL"))
+                if 'trial_ends_at' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN trial_ends_at DATETIME"))
+                if 'subscription_expires_at' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN subscription_expires_at DATETIME"))
+                if 'subscription_plan' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'FinanceAI Free Trial (1 Month)' NOT NULL"))
+    except Exception as err:
+        print(f"[Schema Migration Warning] {err}")
+
 def seed_demo_data():
     """Create all tables and seed sample data if demo user does not exist."""
     db.create_all()
+    ensure_schema_migrations()
 
     demo_user = User.query.filter_by(email="demo@finance.test").first()
     if not demo_user:
         demo_user = User(
             name="Demo Student",
             email="demo@finance.test",
-            currency="₹"
+            currency="₹",
+            subscription_status="trial",
+            subscription_plan="FinanceAI Free Trial (1 Month)"
         )
         demo_user.set_password("Password123!")
         db.session.add(demo_user)

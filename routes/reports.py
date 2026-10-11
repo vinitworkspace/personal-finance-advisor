@@ -1,6 +1,7 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
 from routes.auth import login_required, get_current_user
+from routes.subscription import subscription_required
 from services.finance_service import FinanceService
 from services.budget_service import BudgetService
 from services.report_service import ReportService
@@ -36,6 +37,7 @@ def view_reports():
 
 @reports_bp.route('/reports/generate', methods=['POST'])
 @login_required
+@subscription_required
 def generate_report():
     """Compile and archive a fresh monthly financial snapshot with updated AI advice."""
     user = get_current_user()
@@ -48,6 +50,7 @@ def generate_report():
 
 @reports_bp.route('/reports/export/csv', methods=['GET'])
 @login_required
+@subscription_required
 def export_csv():
     """Download full ledger export in CSV format."""
     user = get_current_user()

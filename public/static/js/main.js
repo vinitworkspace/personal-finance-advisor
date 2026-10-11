@@ -65,14 +65,26 @@ function closeModal(modalId) {
 
 // Initialize listeners on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Sidebar Toggle
+    // Mobile Sidebar Toggle & Backdrop
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebar = document.querySelector('.app-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
 
     if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = sidebar.classList.toggle('open');
+            if (backdrop) backdrop.classList.toggle('active', isOpen);
+            document.body.style.overflow = isOpen ? 'hidden' : '';
         });
+
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
@@ -80,6 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 !sidebar.contains(e.target) && 
                 !sidebarToggle.contains(e.target)) {
                 sidebar.classList.remove('open');
+                if (backdrop) backdrop.classList.remove('active');
+                document.body.style.overflow = '';
             }
         });
     }

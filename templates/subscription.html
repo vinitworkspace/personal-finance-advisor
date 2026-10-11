@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription & Plans{% endblock %}
+{% block header_title %}Subscription & Membership{% endblock %}
+{% block header_subtitle %}First 30 days free, then continue enjoying full AI Advisor intelligence for only ₹100/month{% endblock %}
+
+{% block content %}
+<div class="subscription-page-container">
+  <!-- Active Membership Status Card -->
+  <div class="card status-overview-card" style="margin-bottom: 32px; position: relative; overflow: hidden; border-color: var(--border-glow);">
+    <div class="status-card-glow"></div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; position: relative; z-index: 1;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          <h2 style="font-size: 1.4rem; font-weight: 800;">Current Membership Status</h2>
+          {% if sub.status == 'active' %}
+            <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 14px; border-radius: var(--radius-full);">💎 Pro Member</span>
+          {% elif sub.status == 'trial' %}
+            <span class="badge badge-primary" style="font-size: 0.85rem; padding: 6px 14px; border-radius: var(--radius-full); background: var(--primary-gradient);">✨ 30-Day Free Trial Active</span>
+          {% else %}
+            <span class="badge badge-danger" style="font-size: 0.85rem; padding: 6px 14px; border-radius: var(--radius-full);">⚠️ Trial Expired</span>
+          {% endif %}
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+          {{ sub.notice }}
+        </p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;">Days Remaining</div>
+          <div style="font-size: 1.8rem; font-weight: 800; color: {% if sub.days_remaining > 5 %}var(--income-green){% elif sub.days_remaining > 0 %}var(--warning-amber){% else %}var(--expense-rose){% endif %};">
+            {{ sub.days_remaining }} <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">Days</span>
+          </div>
+        </div>
+        {% if not sub.is_active or sub.days_remaining <= 7 %}
+          <button class="btn btn-primary" onclick="openCheckoutModal()" style="padding: 12px 24px; font-weight: 700; box-shadow: 0 0 20px var(--primary-glow);">
+            ⚡ Upgrade / Renew for ₹100
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Trial Days Progress Bar -->
+    <div style="margin-top: 24px; background: rgba(255, 255, 255, 0.06); border-radius: 9999px; height: 8px; overflow: hidden;">
+      {% set progress = (sub.days_remaining / 30.0 * 100)|round|int %}
+      <div style="height: 100%; width: {{ [progress, 100]|min }}%; background: var(--primary-gradient); border-radius: 9999px; transition: width 0.5s ease;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.78rem; color: var(--text-dim);">
+      <span>Day 1 (Registration)</span>
+      <span>30-Day Free Trial Window</span>
+      <span>₹100/Month Renewal</span>
+    </div>
+  </div>
+
+  <!-- Pricing Cards Grid -->
+  <div class="pricing-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; margin-bottom: 48px;">
+    <!-- Free Starter Plan -->
+    <div class="card pricing-card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-subtle);">
+      <div>
+        <div style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px;">Basic</div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 12px;">Free Starter</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+          Standard ledger logging without AI automated intelligence.
+        </p>
+
+        <div style="margin-bottom: 24px;">
+          <span style="font-size: 2.4rem; font-weight: 800; color: var(--text-main);">₹0</span>
+          <span style="color: var(--text-dim); font-size: 0.95rem;"> / forever</span>
+        </div>
+
+        <ul class="feature-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green);">✓</span> Manual Income & Expense Tracking
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green);">✓</span> 1 Monthly Category Budget
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-dim);">
+            <span style="color: var(--text-dim);">✕</span> <del>Interactive AI Financial Advisor</del>
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-dim);">
+            <span style="color: var(--text-dim);">✕</span> <del>Automated PDF Executive Reports</del>
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-dim);">
+            <span style="color: var(--text-dim);">✕</span> <del>Daily Spending Velocity Forecasts</del>
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-dim);">
+            <span style="color: var(--text-dim);">✕</span> <del>Full Ledger CSV Export</del>
+          </li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <button class="btn btn-secondary" style="width: 100%; opacity: 0.7;" disabled>
+          Current Base Tier
+        </button>
+      </div>
+    </div>
+
+    <!-- Pro Membership (Highlighted) -->
+    <div class="card pricing-card pro-card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: var(--primary); box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 16px; right: 16px;">
+        <span class="badge" style="background: var(--primary-gradient); color: #fff; font-size: 0.75rem; font-weight: 800; padding: 5px 12px; border-radius: var(--radius-full); text-transform: uppercase;">
+          ⭐ Most Popular
+        </span>
+      </div>
+
+      <div>
+        <div style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em; margin-bottom: 8px;">Intelligence Edition</div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          FinanceAI Pro
+          <span style="font-size: 1.2rem;">✨</span>
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+          Full AI Financial Advisor grounding, automated reports, and unlimited financial intelligence.
+        </p>
+
+        <div style="margin-bottom: 24px;">
+          <div style="display: flex; align-items: baseline; gap: 6px;">
+            <span style="font-size: 2.6rem; font-weight: 800; color: #fff;">₹100</span>
+            <span style="color: var(--text-muted); font-size: 0.95rem;"> / month</span>
+          </div>
+          <div style="display: inline-block; background: rgba(16, 185, 129, 0.15); color: var(--income-green); font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full); margin-top: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+            🎉 1st Month 100% FREE for every student / user
+          </div>
+        </div>
+
+        <ul class="feature-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Unlimited AI Advisor Consultations</strong> (Gemini AI)
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Automated Monthly PDF Reports</strong> with AI audit
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Daily Spending Velocity & Run-rate Forecaster</strong>
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Full Ledger CSV Export</strong> for Excel & Tax planning
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Unlimited Category Budgets</strong> with over-limit alerts
+          </li>
+          <li style="display: flex; align-items: center; gap: 10px; color: var(--text-main);">
+            <span style="color: var(--income-green); font-weight: 800;">✓</span> <strong>Automated Zero-Downtime Data Sync</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <button class="btn btn-primary" onclick="openCheckoutModal()" style="width: 100%; padding: 14px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 20px var(--primary-glow);">
+          {% if sub.status == 'active' %}
+            🔄 Extend Pro Subscription (₹100)
+          {% elif sub.status == 'trial' %}
+            ⚡ Subscribe Ahead (₹100 / Month)
+          {% else %}
+            🚀 Reactivate Pro Access (₹100)
+          {% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frequently Asked Questions -->
+  <div class="card" style="margin-top: 32px;">
+    <h3 style="margin-bottom: 20px; font-size: 1.25rem;">Frequently Asked Questions</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+      <div>
+        <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">How does the 1st free month work?</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+          Every newly registered user automatically receives 30 calendar days of full FinanceAI Pro access without needing to enter any credit card or payment details.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">When do I need to pay ₹100?</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+          After your first 30 free days elapse, you can choose to subscribe for ₹100/month to keep accessing the AI Advisor and generating executive monthly reports.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">What payment methods are supported?</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+          We support instant payments via UPI (Google Pay, PhonePe, Paytm, BHIM, QR code), Debit/Credit Cards (Visa, RuPay, MasterCard), and Net Banking.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">Can I cancel anytime?</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+          Yes! There are zero cancellation penalties or locked contracts. You only pay month-to-month whenever you need AI financial guidance.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Simulated Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-card" style="max-width: 480px;">
+    <div class="modal-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4rem;">💳</span>
+        <h3 style="margin: 0; font-size: 1.2rem;">Complete ₹100 Subscription</h3>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('checkoutModal')">&times;</button>
+    </div>
+
+    <form id="checkoutForm" onsubmit="handleCheckoutSubmit(event)">
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 18px;">
+        <!-- Order Summary Box -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-glow); border-radius: var(--radius-sm); padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 600; color: var(--text-main);">FinanceAI Pro (30 Days)</span>
+            <span style="font-weight: 800; font-size: 1.15rem; color: var(--income-green);">₹100.00</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); display: flex; justify-content: space-between;">
+            <span>Billing Interval: Monthly</span>
+            <span>Taxes Included (GST)</span>
+          </div>
+        </div>
+
+        <!-- Payment Method Tabs -->
+        <div>
+          <label class="form-label" style="margin-bottom: 8px;">Select Payment Method</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+            <button type="button" class="btn btn-secondary pay-tab active" onclick="switchPayTab('upi', this)" style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
+              📱 UPI / QR
+            </button>
+            <button type="button" class="btn btn-secondary pay-tab" onclick="switchPayTab('card', this)" style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
+              💳 Card
+            </button>
+            <button type="button" class="btn btn-secondary pay-tab" onclick="switchPayTab('netbanking', this)" style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
+              🏦 NetBanking
+            </button>
+          </div>
+        </div>
+
+        <input type="hidden" name="amount" value="100">
+        <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="upi">
+
+        <!-- UPI Tab Content -->
+        <div id="tab-upi" class="payment-tab-content">
+          <div style="text-align: center; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle); margin-bottom: 14px;">
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Scan with Any UPI App (GPay / PhonePe / Paytm)</div>
+            <!-- Dynamic SVG QR Code Simulation -->
+            <svg width="120" height="120" viewBox="0 0 120 120" style="background: #fff; padding: 6px; border-radius: 8px;">
+              <rect x="10" y="10" width="30" height="30" fill="#0f172a" />
+              <rect x="16" y="16" width="18" height="18" fill="#fff" />
+              <rect x="20" y="20" width="10" height="10" fill="#0f172a" />
+              
+              <rect x="80" y="10" width="30" height="30" fill="#0f172a" />
+              <rect x="86" y="16" width="18" height="18" fill="#fff" />
+              <rect x="90" y="20" width="10" height="10" fill="#0f172a" />
+
+              <rect x="10" y="80" width="30" height="30" fill="#0f172a" />
+              <rect x="16" y="86" width="18" height="18" fill="#fff" />
+              <rect x="20" y="90" width="10" height="10" fill="#0f172a" />
+
+              <!-- QR Data pixels -->
+              <rect x="46" y="20" width="8" height="8" fill="#0f172a" />
+              <rect x="60" y="32" width="12" height="6" fill="#0f172a" />
+              <rect x="52" y="52" width="16" height="16" fill="#6366f1" />
+              <rect x="20" y="52" width="8" height="8" fill="#0f172a" />
+              <rect x="80" y="60" width="14" height="8" fill="#0f172a" />
+              <rect x="46" y="84" width="12" height="14" fill="#0f172a" />
+              <rect x="74" y="88" width="16" height="12" fill="#0f172a" />
+            </svg>
+            <div style="font-size: 0.8rem; color: var(--income-green); font-weight: 700; margin-top: 8px;">UPI ID: financeai@upi (₹100)</div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="upiId">Or Enter Your VPA / UPI ID</label>
+            <input type="text" id="upiId" class="form-control" placeholder="yourname@okhdfcbank" value="{{ current_user.email.split('@')[0] }}@upi">
+          </div>
+        </div>
+
+        <!-- Card Tab Content -->
+        <div id="tab-card" class="payment-tab-content" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Card Number</label>
+            <input type="text" class="form-control" placeholder="4111 2222 3333 4444" value="4111 •••• •••• 1234">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Expiry (MM/YY)</label>
+              <input type="text" class="form-control" placeholder="12/28" value="12/28">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">CVV</label>
+              <input type="password" class="form-control" placeholder="123" maxlength="3" value="987">
+            </div>
+          </div>
+        </div>
+
+        <!-- NetBanking Tab Content -->
+        <div id="tab-netbanking" class="payment-tab-content" style="display: none;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Select Your Bank</label>
+            <select class="form-control">
+              <option value="hdfc">HDFC Bank</option>
+              <option value="sbi">State Bank of India (SBI)</option>
+              <option value="icici">ICICI Bank</option>
+              <option value="axis">Axis Bank</option>
+              <option value="kotak">Kotak Mahindra Bank</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('checkoutModal')">Cancel</button>
+        <button type="submit" id="payButton" class="btn btn-primary" style="font-weight: 700; padding: 10px 24px; box-shadow: 0 0 15px var(--primary-glow);">
+          🔒 Pay ₹100 & Activate
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openCheckoutModal() {
+  openModal('checkoutModal');
+}
+
+function switchPayTab(tabName, btnElem) {
+  document.querySelectorAll('.pay-tab').forEach(b => b.classList.remove('active'));
+  btnElem.classList.add('active');
+
+  document.querySelectorAll('.payment-tab-content').forEach(c => c.style.display = 'none');
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.style.display = 'block';
+
+  document.getElementById('selectedPaymentMethod').value = tabName;
+}
+
+function handleCheckoutSubmit(e) {
+  e.preventDefault();
+  const payBtn = document.getElementById('payButton');
+  payBtn.disabled = true;
+  payBtn.innerHTML = '⏳ Processing ₹100...';
+
+  const formData = new FormData(document.getElementById('checkoutForm'));
+  
+  fetch('{{ url_for("subscription.checkout") }}', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showToast(data.message, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    } else {
+      showToast(data.error || 'Payment failed', 'danger');
+      payBtn.disabled = false;
+      payBtn.innerHTML = '🔒 Pay ₹100 & Activate';
+    }
+  })
+  .catch(err => {
+    // If standard HTML redirect fallback
+    document.getElementById('checkoutForm').submit();
+  });
+}
+</script>
+{% endblock %}

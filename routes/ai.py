@@ -1,6 +1,7 @@
 from datetime import date
 from flask import Blueprint, render_template, request, jsonify
 from routes.auth import login_required, get_current_user
+from routes.subscription import subscription_required
 from services.finance_service import FinanceService
 from services.budget_service import BudgetService
 from services.analytics_service import AnalyticsService
@@ -36,6 +37,7 @@ def _build_user_financial_context(user_id: int, month: int = None, year: int = N
 
 @ai_bp.route('/advisor', methods=['GET'])
 @login_required
+@subscription_required
 def view_advisor():
     """Interactive conversational AI Financial Advisor interface."""
     user = get_current_user()
@@ -97,6 +99,7 @@ def api_generate_advice():
 
 @ai_bp.route('/api/ai/chat', methods=['POST'])
 @login_required
+@subscription_required
 def api_chat():
     """Interactive natural language financial Q&A grounded in user data."""
     user = get_current_user()

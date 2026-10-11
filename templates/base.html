@@ -64,6 +64,11 @@
           <span class="nav-icon">📑</span>
           <span>Monthly Reports</span>
         </a>
+        <a href="{{ url_for('subscription.pricing') }}" class="nav-item {% if 'subscription' in request.endpoint %}active{% endif %}">
+          <span class="nav-icon">💎</span>
+          <span>Subscription & Plan</span>
+          <span class="nav-badge" style="margin-left: auto; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: rgba(99, 102, 241, 0.25); color: #818cf8;">₹100/mo</span>
+        </a>
         <a href="/settings" class="nav-item {% if 'setting' in request.endpoint %}active{% endif %}">
           <span class="nav-icon">⚙️</span>
           <span>Settings</span>
@@ -84,6 +89,9 @@
       </div>
     </aside>
 
+    <!-- Mobile Sidebar Dark Overlay -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <!-- Main Content Area -->
     <div class="app-main">
       <!-- Sticky Top Bar -->
@@ -97,13 +105,33 @@
         </div>
 
         <div class="topbar-right">
+          {% set sub_info = current_user.get_subscription_info() %}
+          <a href="{{ url_for('subscription.pricing') }}" class="subscription-pill {{ sub_info.badge_class }}" title="Manage Subscription">
+            {{ sub_info.badge_text }}
+          </a>
           <span class="currency-badge" title="Active Account Currency">Currency: {{ current_user.currency }}</span>
-          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Sign Out</a>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm header-signout-btn">Sign Out</a>
         </div>
       </header>
 
       <!-- Main Body Container -->
       <main class="content-body">
+        {% set sub_info = current_user.get_subscription_info() %}
+        {% if not sub_info.is_active %}
+          <div class="subscription-expired-banner">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 1.4rem;">⚠️</span>
+              <div>
+                <strong style="color: #fff; font-size: 0.95rem;">30-Day Free Trial Expired</strong>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">Subscribe for <strong>₹100/month</strong> to unlock full AI Financial Advisor and executive report archives.</p>
+              </div>
+            </div>
+            <a href="{{ url_for('subscription.pricing') }}" class="btn btn-primary btn-sm" style="font-weight: 700; white-space: nowrap; box-shadow: 0 0 15px var(--primary-glow);">
+              ⚡ Subscribe for ₹100
+            </a>
+          </div>
+        {% endif %}
+
         <!-- Educational Disclaimer Banner -->
         <div class="disclaimer-banner">
           <div>
@@ -128,6 +156,30 @@
         <!-- Child Page Content -->
         {% block content %}{% endblock %}
       </main>
+
+      <!-- Mobile Bottom Navigation Bar (For Thumb Accessibility on Smart Phones) -->
+      <nav class="mobile-bottom-nav">
+        <a href="{{ url_for('dashboard.index') }}" class="mobile-nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+          <span class="mobile-nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/income" class="mobile-nav-link {% if 'income' in request.endpoint %}active{% endif %}">
+          <span class="mobile-nav-icon">💰</span>
+          <span>Income</span>
+        </a>
+        <a href="/expenses" class="mobile-nav-link {% if 'expense' in request.endpoint %}active{% endif %}">
+          <span class="mobile-nav-icon">💳</span>
+          <span>Expenses</span>
+        </a>
+        <a href="/advisor" class="mobile-nav-link {% if 'ai' in request.endpoint or 'advisor' in request.endpoint %}active{% endif %}">
+          <span class="mobile-nav-icon">✨</span>
+          <span>AI Advisor</span>
+        </a>
+        <a href="{{ url_for('subscription.pricing') }}" class="mobile-nav-link {% if 'subscription' in request.endpoint %}active{% endif %}">
+          <span class="mobile-nav-icon">💎</span>
+          <span>Plan</span>
+        </a>
+      </nav>
     </div>
   </div>
 {% else %}

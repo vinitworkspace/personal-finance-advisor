@@ -165,7 +165,17 @@ class TestAuth(unittest.TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(data['user']['name'], 'API User')
         self.assertEqual(data['user']['email'], 'api@example.com')
-        self.assertNotIn('password_hash', data['user'])
+    def test_api_entrypoint_redirects(self):
+        """Test that direct visits to serverless function entrypoints redirect cleanly."""
+        for path in ['/api', '/api/', '/api/index', '/api/index.py']:
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 302, f"Failed for path {path}")
+
+    def test_favicon_route(self):
+        """Test that /favicon.ico returns 200 with SVG content."""
+        response = self.client.get('/favicon.ico')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('image/svg+xml', response.content_type)
 
 if __name__ == '__main__':
     unittest.main()

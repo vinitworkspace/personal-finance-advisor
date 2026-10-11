@@ -20,6 +20,38 @@ from init_db import seed_demo_data
 # Create production Flask WSGI application instance
 app = create_app('production')
 
+class VercelWSGIMiddleware:
+    """
+    WSGI middleware ensuring correct path routing on Vercel Serverless environment.
+    1. If PATH_INFO is /api/index.py, /api/index, /api, or /api/, normalizes it to '/'.
+    2. Recovers original requested path from Vercel edge headers (HTTP_X_FORWARDED_PATH, HTTP_X_MATCHED_PATH).
+    3. Handles cases where the entrypoint prefix was prepended to the path.
+    """
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        path = environ.get('PATH_INFO', '')
+
+        # Inspect Vercel edge headers for original client request path
+        forwarded_path = environ.get('HTTP_X_FORWARDED_PATH') or environ.get('HTTP_X_MATCHED_PATH')
+        if forwarded_path and forwarded_path != path and not forwarded_path.startswith('/api/index'):
+            environ['PATH_INFO'] = forwarded_path
+            path = forwarded_path
+
+        # If PATH_INFO is directly targeting the serverless entrypoint
+        if path in ('/api/index.py', '/api/index', '/api', '/api/'):
+            environ['PATH_INFO'] = '/'
+        elif path.startswith('/api/index.py/'):
+            environ['PATH_INFO'] = path.replace('/api/index.py', '', 1) or '/'
+        elif path.startswith('/api/index/'):
+            environ['PATH_INFO'] = path.replace('/api/index', '', 1) or '/'
+
+        return self.wsgi_app(environ, start_response)
+
+# Apply Vercel WSGI routing middleware
+app.wsgi_app = VercelWSGIMiddleware(app.wsgi_app)
+
 # Auto-initialize database tables and demo seed data on serverless cold start in /tmp
 with app.app_context():
     try:

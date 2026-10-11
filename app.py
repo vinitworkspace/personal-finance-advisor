@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for, Response
 from config import config_by_name
 from models import db
 from routes.auth import auth_bp, get_current_user
@@ -45,6 +45,26 @@ def create_app(config_name: str = None) -> Flask:
         return {
             'current_user': get_current_user()
         }
+
+    # API entrypoint redirect (handles direct visits to /api, /api/index, /api/index.py)
+    @app.route('/api')
+    @app.route('/api/')
+    @app.route('/api/index')
+    @app.route('/api/index.py')
+    def api_entrypoint_redirect():
+        return redirect(url_for('dashboard.home'))
+
+    # Serve brand favicon to eliminate browser 404 console errors
+    @app.route('/favicon.ico')
+    def favicon():
+        svg_favicon = (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+            '<rect width="32" height="32" rx="8" fill="#4f46e5"/>'
+            '<text x="50%" y="54%" font-size="18" font-family="system-ui,sans-serif" '
+            'font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">₹</text>'
+            '</svg>'
+        )
+        return Response(svg_favicon, mimetype='image/svg+xml')
 
     # Health check endpoint for system monitoring
     @app.route('/health')

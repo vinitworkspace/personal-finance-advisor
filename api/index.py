@@ -1,5 +1,5 @@
 """
-Vercel Serverless Function Entrypoint for Personal Finance Advisor Bot.
+Vercel Serverless Function Entrypoint for VinZie Budget Tracker.
 Handles WSGI request routing and auto-initializes the database in /tmp on cold start.
 """
 import os

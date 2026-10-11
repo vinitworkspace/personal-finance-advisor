@@ -73,7 +73,7 @@ class TestSubscription(unittest.TestCase):
         self.assertEqual(json_data['code'], 'SUBSCRIPTION_EXPIRED')
 
     def test_payment_checkout_activates_pro(self):
-        """Verify that paying ₹100 activates FinanceAI Pro for 30 calendar days."""
+        """Verify that paying ₹100 activates VinZie Pro for 30 calendar days."""
         # Expire user first
         self.user.subscription_status = 'expired'
         self.user.trial_ends_at = datetime.utcnow() - timedelta(days=5)

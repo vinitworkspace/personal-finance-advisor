@@ -13,7 +13,7 @@ from routes.reports import reports_bp
 from routes.subscription import subscription_bp
 
 def create_app(config_name: str = None) -> Flask:
-    """Application factory for Personal Finance Advisor Bot."""
+    """Application factory for VinZie Budget Tracker."""
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
 
@@ -73,7 +73,7 @@ def create_app(config_name: str = None) -> Flask:
     def health_check():
         return jsonify({
             'status': 'healthy',
-            'service': 'Personal Finance Advisor Bot',
+            'service': 'VinZie Budget Tracker',
             'database': 'SQLite connected'
         }), 200
 
@@ -96,7 +96,7 @@ def create_app(config_name: str = None) -> Flask:
 if __name__ == '__main__':
     app = create_app('development')
     print("=" * 60)
-    print(" Personal Finance Advisor Bot is running!")
+    print(" VinZie Budget Tracker is running!")
     print(" Local URL: http://127.0.0.1:5000")
     print("=" * 60)
     app.run(host='127.0.0.1', port=5000, debug=True)

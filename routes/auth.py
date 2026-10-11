@@ -80,7 +80,7 @@ def register():
             session['user_id'] = new_user.id
             session.permanent = True
 
-            flash("Account registered successfully! Welcome to your Personal Finance Advisor.", "success")
+            flash("Account registered successfully! Welcome to VinZie Budget Tracker.", "success")
             if request.is_json:
                 return jsonify({'success': True, 'redirect': url_for('dashboard.index')}), 201
             return redirect(url_for('dashboard.index'))

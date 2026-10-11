@@ -1,4 +1,4 @@
-# Personal Finance Advisor Bot 💰🤖
+# VinZie Budget Tracker 💰🤖
 > **An AI-powered full-stack personal finance planning, budgeting, and management web application.**  
 > Built with **Python, Flask, SQLite, Vanilla CSS/JS, Chart.js, and Google Gemini AI**.
 

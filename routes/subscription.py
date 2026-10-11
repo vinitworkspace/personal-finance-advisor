@@ -1,5 +1,5 @@
 """
-Subscription & Billing Management Module for Personal Finance Advisor Bot.
+Subscription & Billing Management Module for VinZie Budget Tracker.
 Handles ₹100/month subscriptions, 30-day free trials, and feature paywalls.
 """
 from functools import wraps
@@ -70,10 +70,10 @@ def checkout():
         return redirect(url_for('subscription.pricing'))
 
     # Extend or activate subscription for 30 calendar days
-    expires_at = user.activate_subscription(duration_days=30, plan_name="FinanceAI Pro (Monthly - ₹100)")
+    expires_at = user.activate_subscription(duration_days=30, plan_name="VinZie Pro (Monthly - ₹100)")
     db.session.commit()
 
-    success_msg = f"Payment of ₹{int(amount)} received via {payment_method.upper()}! FinanceAI Pro active until {expires_at.strftime('%d %b %Y')}."
+    success_msg = f"Payment of ₹{int(amount)} received via {payment_method.upper()}! VinZie Pro active until {expires_at.strftime('%d %b %Y')}."
     flash(success_msg, "success")
 
     if request.is_json:

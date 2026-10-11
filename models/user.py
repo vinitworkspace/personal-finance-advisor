@@ -17,7 +17,7 @@ class User(db.Model):
     subscription_status = db.Column(db.String(20), default='trial', nullable=False) # 'trial', 'active', 'expired'
     trial_ends_at = db.Column(db.DateTime, default=lambda: datetime.utcnow() + timedelta(days=30), nullable=True)
     subscription_expires_at = db.Column(db.DateTime, nullable=True)
-    subscription_plan = db.Column(db.String(50), default='FinanceAI Free Trial (1 Month)', nullable=False)
+    subscription_plan = db.Column(db.String(50), default='VinZie Free Trial (1 Month)', nullable=False)
 
     # Relationships: Deleting a user automatically cascades and deletes their financial records
     incomes = db.relationship('Income', backref='user', cascade='all, delete-orphan', lazy='dynamic')
@@ -68,7 +68,7 @@ class User(db.Model):
                 return {
                     'status': 'active',
                     'is_active': True,
-                    'plan_name': self.subscription_plan or 'FinanceAI Pro (Monthly - ₹100)',
+                    'plan_name': self.subscription_plan or 'VinZie Pro (Monthly - ₹100)',
                     'days_remaining': days_left,
                     'badge_text': '💎 Pro Member',
                     'badge_class': 'badge-pro',
@@ -78,7 +78,7 @@ class User(db.Model):
                 return {
                     'status': 'trial',
                     'is_active': True,
-                    'plan_name': 'Free Trial (1 Month)',
+                    'plan_name': 'VinZie Free Trial (1 Month)',
                     'days_remaining': days_left,
                     'badge_text': f'✨ Trial: {days_left}d left',
                     'badge_class': 'badge-trial',
@@ -95,7 +95,7 @@ class User(db.Model):
                 'notice': 'Your 30-day free trial has expired. Subscribe for ₹100/month to keep accessing AI features.'
             }
 
-    def activate_subscription(self, duration_days: int = 30, plan_name: str = 'FinanceAI Pro (Monthly - ₹100)') -> datetime:
+    def activate_subscription(self, duration_days: int = 30, plan_name: str = 'VinZie Pro (Monthly - ₹100)') -> datetime:
         """Activate or extend user subscription by given days (default 30 days for ₹100/month)."""
         now = datetime.utcnow()
         # If already active and unexpired, extend from previous expiration

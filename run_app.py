@@ -1,5 +1,5 @@
 """
-Personal Finance Advisor Bot - Browser Launcher Script
+VinZie Budget Tracker - Browser Launcher Script
 Runs the Flask application and automatically launches your default web browser.
 """
 
@@ -35,7 +35,7 @@ def main():
     browser_thread.start()
 
     print("=" * 65)
-    print("  PERSONAL FINANCE ADVISOR BOT")
+    print("  VINZIE BUDGET TRACKER")
     print(f"  Status     : Server starting on {app_url}")
     print(f"  Browser    : Opening automatically in your default browser...")
     print(f"  Demo Login : demo_user  |  Password: DemoPass@123")

@@ -1,5 +1,5 @@
 """
-Database initialization and verification script for Personal Finance Advisor Bot.
+Database initialization and verification script for VinZie Budget Tracker.
 Creates SQLite tables and seeds initial test data for demonstration.
 """
 from datetime import date
@@ -20,7 +20,7 @@ def ensure_schema_migrations():
                 if 'subscription_expires_at' not in columns:
                     conn.execute(text("ALTER TABLE users ADD COLUMN subscription_expires_at DATETIME"))
                 if 'subscription_plan' not in columns:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'FinanceAI Free Trial (1 Month)' NOT NULL"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'VinZie Free Trial (1 Month)' NOT NULL"))
     except Exception as err:
         print(f"[Schema Migration Warning] {err}")
 
@@ -36,7 +36,7 @@ def seed_demo_data():
             email="demo@finance.test",
             currency="₹",
             subscription_status="trial",
-            subscription_plan="FinanceAI Free Trial (1 Month)"
+            subscription_plan="VinZie Free Trial (1 Month)"
         )
         demo_user.set_password("Password123!")
         db.session.add(demo_user)

@@ -152,7 +152,7 @@ class GeminiService:
                 alerts = user_context.get('alerts', [])
 
                 prompt = f"""
-                You are a friendly, expert Senior Personal Finance Advisor mentoring a user on budgeting and personal wealth discipline.
+                You are a friendly, expert Senior Financial Advisor for VinZie Budget Tracker mentoring a user on budgeting and personal wealth discipline.
                 The financial data for the current month is:
                 - Monthly Income: {currency}{income:,.2f}
                 - Monthly Expenses: {currency}{expenses:,.2f}
@@ -282,7 +282,7 @@ Aim to accumulate **3 to 6 months of basic living expenses** ({currency}{expense
                 burn_rate = user_context.get('average_daily_spend', 0.0)
 
                 prompt = f"""
-                You are FinanceAI, an intelligent and encouraging personal finance mentor.
+                You are VinZie, an intelligent and encouraging personal finance mentor for VinZie Budget Tracker.
                 You are answering a user's question about their personal budget.
                 
                 Ground your answers strictly using their real financial data:

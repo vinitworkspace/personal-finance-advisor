@@ -188,7 +188,7 @@
     <div style="display: flex; align-items: center; gap: 10px;">
       <div class="msg-avatar avatar-bot">✨</div>
       <div>
-        <h3 style="font-size: 1rem; margin: 0;">FinanceAI Assistant</h3>
+        <h3 style="font-size: 1rem; margin: 0;">VinZie Assistant</h3>
         <span style="font-size: 0.75rem; color: #34d399; display: flex; align-items: center; gap: 4px;">
           <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
           Gemini 1.5 Flash Grounded Mode Active
@@ -208,7 +208,7 @@
       <div class="msg-avatar avatar-bot">✨</div>
       <div class="msg-bubble bubble-bot">
         <p>
-          Hello <strong>{{ current_user.name }}</strong>! I am your <strong>Personal Finance Advisor Bot</strong>.
+          Hello <strong>{{ current_user.name }}</strong>! I am your <strong>VinZie Budget Tracker Advisor</strong>.
         </p>
         <p>
           I have analyzed your recorded transactions for this month (<strong>{{ current_user.currency }}{{ "%.2f"|format(summary.total_income) }}</strong> income, <strong>{{ current_user.currency }}{{ "%.2f"|format(summary.total_expenses) }}</strong> expenses, <strong>{{ summary.savings_percentage }}%</strong> savings rate).

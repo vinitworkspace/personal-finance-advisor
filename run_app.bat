@@ -1,7 +1,7 @@
 @echo off
-title Personal Finance Advisor Bot
+title VinZie Budget Tracker
 echo ======================================================================
-echo             Personal Finance Advisor Bot - Browser Launcher
+echo                VinZie Budget Tracker - Browser Launcher
 echo ======================================================================
 echo.
 

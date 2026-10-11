@@ -17,31 +17,42 @@ os.environ['VERCEL'] = '1'
 from app import create_app
 from init_db import seed_demo_data
 
+from urllib.parse import parse_qs, urlencode
+
 # Create production Flask WSGI application instance
 app = create_app('production')
 
 class VercelWSGIMiddleware:
     """
     WSGI middleware ensuring correct path routing on Vercel Serverless environment.
-    1. If PATH_INFO is /api/index.py, /api/index, /api, or /api/, normalizes it to '/'.
-    2. Recovers original requested path from Vercel edge headers (HTTP_X_FORWARDED_PATH, HTTP_X_MATCHED_PATH).
-    3. Handles cases where the entrypoint prefix was prepended to the path.
+    1. Recovers true requested path passed via __vercel_route__ query param from vercel.json.
+    2. Strips internal routing query param and reconstructs original query string.
+    3. Safely normalizes direct hits to /api/index, /api/index.py, /api to root '/'.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        path = environ.get('PATH_INFO', '')
-        print("[VERCEL_DEBUG_PATH]", path)
-        print("[VERCEL_DEBUG_ENV]", {k: str(v) for k, v in environ.items() if not k.startswith('wsgi.') and not k.startswith('SERVER_')})
+        query_string = environ.get('QUERY_STRING', '')
 
-        # If PATH_INFO is directly targeting the serverless entrypoint
-        if path in ('/api/index.py', '/api/index', '/api', '/api/'):
-            environ['PATH_INFO'] = '/'
-        elif path.startswith('/api/index.py/'):
-            environ['PATH_INFO'] = path.replace('/api/index.py', '', 1) or '/'
-        elif path.startswith('/api/index/'):
-            environ['PATH_INFO'] = path.replace('/api/index', '', 1) or '/'
+        # Check if true route was passed via rewrite query parameter
+        if '__vercel_route__' in query_string:
+            params = parse_qs(query_string, keep_blank_values=True)
+            route_val = params.pop('__vercel_route__', [None])[0]
+            if route_val:
+                clean_path = '/' + route_val.lstrip('/')
+                environ['PATH_INFO'] = clean_path
+                # Rebuild original query string without the routing parameter
+                flat_params = [(k, v) for k, vs in params.items() for v in vs]
+                environ['QUERY_STRING'] = urlencode(flat_params)
+        else:
+            path = environ.get('PATH_INFO', '')
+            if path in ('/api/index.py', '/api/index', '/api', '/api/'):
+                environ['PATH_INFO'] = '/'
+            elif path.startswith('/api/index.py/'):
+                environ['PATH_INFO'] = path.replace('/api/index.py', '', 1) or '/'
+            elif path.startswith('/api/index/'):
+                environ['PATH_INFO'] = path.replace('/api/index', '', 1) or '/'
 
         return self.wsgi_app(environ, start_response)
 
